@@ -554,6 +554,52 @@ def reader_dashboard(request):
         'unread_notif_count': unread_notif_count,
     })
 
+def reader_profile(request):
+    reader_id = request.session.get('reader_id')
+    if not reader_id:
+        return redirect('login_reader')
+    
+    try:
+        reader = Reader.objects.get(id=reader_id)
+    except Reader.DoesNotExist:
+        return redirect('login_reader')
+    
+    unread_notif_count = reader.notifications.filter(read=False).count()
+    
+    return render(request, 'reader_profile.html', {
+        'reader': reader,
+        'unread_notif_count': unread_notif_count,
+    })
+
+def edit_reader_profile(request):
+    reader_id = request.session.get('reader_id')
+    if not reader_id:
+        return redirect('login_reader')
+    
+    try:
+        reader = Reader.objects.get(id=reader_id)
+    except Reader.DoesNotExist:
+        return redirect('login_reader')
+    
+    if request.method == 'POST':
+        from .forms import ReaderEditProfileForm
+        form = ReaderEditProfileForm(request.POST, request.FILES, instance=reader)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Profile updated successfully!')
+            return redirect('reader_profile')
+    else:
+        from .forms import ReaderEditProfileForm
+        form = ReaderEditProfileForm(instance=reader)
+    
+    unread_notif_count = reader.notifications.filter(read=False).count()
+    
+    return render(request, 'edit_reader_profile.html', {
+        'form': form,
+        'reader': reader,
+        'unread_notif_count': unread_notif_count,
+    })
+
 def reader_view_books(request):
     q = request.GET.get('q', '').strip()
     category_id = request.GET.get('category', '').strip()
@@ -781,6 +827,32 @@ def admin_dashboard(request):
         'low_stock_books': low_stock_books,
     })
 
+@admin_login_required
+def admin_profile(request):
+    admin = request.admin_user
+    return render(request, 'admin_profile.html', {
+        'admin': admin,
+    })
+
+@admin_login_required
+def edit_admin_profile(request):
+    admin = request.admin_user
+    
+    if request.method == 'POST':
+        from .forms import AdminEditProfileForm
+        form = AdminEditProfileForm(request.POST, request.FILES, instance=admin)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Profile updated successfully!')
+            return redirect('admin_profile')
+    else:
+        from .forms import AdminEditProfileForm
+        form = AdminEditProfileForm(instance=admin)
+    
+    return render(request, 'edit_admin_profile.html', {
+        'form': form,
+        'admin': admin,
+    })
 
 @admin_login_required
 def admin_change_password(request):

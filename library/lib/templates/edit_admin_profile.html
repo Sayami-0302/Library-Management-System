@@ -1,0 +1,322 @@
+{% extends 'admin_base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+  .edit-profile-container {
+    padding: 20px;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+
+  .edit-profile-header {
+    margin-bottom: 30px;
+  }
+
+  .edit-profile-header h2 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 10px;
+  }
+
+  .edit-profile-header p {
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+
+  .edit-form {
+    background: var(--card-bg);
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  }
+
+  .form-group {
+    margin-bottom: 22px;
+  }
+
+  .form-group label {
+    display: block;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--primary-blue);
+  }
+
+  .form-group input[type="text"],
+  .form-group input[type="file"] {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.2s;
+    background: white;
+    color: var(--text-dark);
+    box-sizing: border-box;
+  }
+
+  .form-group input[type="text"]:focus,
+  .form-group input[type="file"]:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1);
+  }
+
+  .file-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .file-input-label {
+    display: inline-block;
+    padding: 8px 16px;
+    background: var(--primary-blue);
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 14px;
+    transition: all 0.2s;
+  }
+
+  .file-input-label:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3);
+  }
+
+  .form-group input[type="file"] {
+    display: none;
+  }
+
+  .file-name {
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  .current-image {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+    padding: 15px;
+    background: var(--primary-bg);
+    border-radius: 6px;
+  }
+
+  .current-image-label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--primary-blue);
+  }
+
+  .current-image-thumbnail {
+    width: 150px;
+    height: 150px;
+    border-radius: 6px;
+    overflow: hidden;
+    background: white;
+    border: 2px solid var(--border-color);
+  }
+
+  .current-image-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .error-messages {
+    background: #fee;
+    border: 1px solid #fcc;
+    color: #c33;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    list-style: none;
+  }
+
+  .error-messages li {
+    margin: 5px 0;
+  }
+
+  .success-messages {
+    background: #efe;
+    border: 1px solid #cfc;
+    color: #3c3;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+  }
+
+  .form-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 30px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .btn-primary {
+    background: var(--primary-blue);
+    color: white;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3);
+  }
+
+  .btn-secondary {
+    background: var(--primary-bg);
+    color: var(--text-dark);
+    border: 1px solid var(--border-color);
+  }
+
+  .btn-secondary:hover {
+    background: var(--border-color);
+  }
+
+  @media (max-width: 768px) {
+    .edit-profile-container {
+      padding: 15px;
+    }
+
+    .edit-form {
+      padding: 20px;
+    }
+
+    .edit-profile-header h2 {
+      font-size: 22px;
+    }
+
+    .form-buttons {
+      flex-direction: column;
+    }
+
+    .btn {
+      width: 100%;
+      text-align: center;
+    }
+  }
+</style>
+
+<div class="edit-profile-container">
+  <div class="edit-profile-header">
+    <h2>Edit Your Profile</h2>
+    <p>Update your profile information (except password). To change your password, use the Settings menu.</p>
+  </div>
+
+  <div class="edit-form">
+    {% if messages %}
+      {% for message in messages %}
+        {% if message.tags == 'error' %}
+          <div class="error-messages">
+            <li>{{ message }}</li>
+          </div>
+        {% else %}
+          <div class="success-messages">
+            {{ message }}
+          </div>
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+
+    <form method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="error-messages">
+          {% for error in form.non_field_errors %}
+            <li>{{ error }}</li>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <!-- Name Field -->
+      <div class="form-group">
+        <label for="{{ form.name.id_for_label }}">Full Name</label>
+        {% if form.name.errors %}
+          {% for error in form.name.errors %}
+            <div class="error-messages">
+              <li>{{ error }}</li>
+            </div>
+          {% endfor %}
+        {% endif %}
+        {{ form.name }}
+      </div>
+
+      <!-- Profile Picture Field -->
+      <div class="form-group">
+        <label for="{{ form.profile_picture.id_for_label }}">Profile Picture</label>
+        {% if form.profile_picture.errors %}
+          {% for error in form.profile_picture.errors %}
+            <div class="error-messages">
+              <li>{{ error }}</li>
+            </div>
+          {% endfor %}
+        {% endif %}
+        
+        <div class="file-input-wrapper">
+          <label for="{{ form.profile_picture.id_for_label }}" class="file-input-label">Choose Image</label>
+          {{ form.profile_picture }}
+          <span class="file-name" id="file-name">No file chosen</span>
+        </div>
+
+        {% if admin.profile_picture %}
+          <div class="current-image">
+            <div class="current-image-label">Current Profile Picture</div>
+            <div class="current-image-thumbnail">
+              <img src="{{ admin.profile_picture.url }}" alt="Current profile picture">
+            </div>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Form Buttons -->
+      <div class="form-buttons">
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <a href="{% url 'admin_profile' %}" class="btn btn-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  // Update file name display
+  document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.querySelector('input[type="file"]');
+    const fileName = document.getElementById('file-name');
+    
+    if (fileInput) {
+      fileInput.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+          fileName.textContent = this.files[0].name;
+        } else {
+          fileName.textContent = 'No file chosen';
+        }
+      });
+    }
+  });
+</script>
+
+{% endblock %}

@@ -1,0 +1,215 @@
+{% extends 'admin_base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+  .profile-container {
+    padding: 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .profile-header {
+    display: flex;
+    gap: 30px;
+    background: var(--card-bg);
+    padding: 30px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .profile-picture-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .profile-picture-container {
+    width: 200px;
+    height: 200px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--primary-bg);
+    border: 3px solid var(--primary-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .profile-picture-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .profile-picture-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 80px;
+    background: linear-gradient(135deg, var(--primary-blue), var(--primary-bg));
+    color: white;
+  }
+
+  .profile-info-section {
+    flex: 1;
+    min-width: 300px;
+  }
+
+  .profile-name {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 5px;
+  }
+
+  .profile-role {
+    display: inline-block;
+    background: var(--primary-blue);
+    color: white;
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-weight: 600;
+    margin-bottom: 20px;
+  }
+
+  .info-group {
+    margin-bottom: 18px;
+  }
+
+  .info-label {
+    font-weight: 600;
+    color: var(--text-dark);
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 5px;
+    color: var(--primary-blue);
+  }
+
+  .info-value {
+    color: var(--text-dark);
+    font-size: 16px;
+    line-height: 1.6;
+    word-break: break-word;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+
+  .action-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .action-btn.primary {
+    background: var(--primary-blue);
+    color: white;
+  }
+
+  .action-btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3);
+  }
+
+  .action-btn.secondary {
+    background: var(--primary-bg);
+    color: var(--text-dark);
+    border: 1px solid var(--border-color);
+  }
+
+  .action-btn.secondary:hover {
+    background: var(--border-color);
+  }
+
+  @media (max-width: 768px) {
+    .profile-header {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .profile-picture-container {
+      width: 150px;
+      height: 150px;
+    }
+
+    .profile-picture-placeholder {
+      font-size: 60px;
+    }
+
+    .profile-info-section {
+      width: 100%;
+    }
+
+    .profile-name {
+      font-size: 24px;
+    }
+  }
+</style>
+
+<div class="profile-container">
+  <div class="profile-header">
+    <div class="profile-picture-section">
+      <div class="profile-picture-container">
+        {% if admin.profile_picture %}
+          <img src="{{ admin.profile_picture.url }}" alt="{{ admin.name }}'s Profile Picture">
+        {% else %}
+          <div class="profile-picture-placeholder">👨‍💼</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="profile-info-section">
+      <div class="profile-name">{{ admin.name }}</div>
+      <span class="profile-role">
+        {% if admin.is_superuser %}
+          Super Admin
+        {% else %}
+          Admin
+        {% endif %}
+      </span>
+
+      <div class="info-group">
+        <div class="info-label">Admin ID</div>
+        <div class="info-value">{{ admin.admin_id }}</div>
+      </div>
+
+      <div class="info-group">
+        <div class="info-label">Status</div>
+        <div class="info-value">
+          {% if admin.is_active %}
+            <span style="color: #4caf50; font-weight: 600;">Active</span>
+          {% else %}
+            <span style="color: #ff5252; font-weight: 600;">Inactive</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="action-buttons">
+        <a href="{% url 'edit_admin_profile' %}" class="action-btn primary">Edit Profile</a>
+        <a href="{% url 'admin_dashboard' %}" class="action-btn secondary">Back to Dashboard</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
