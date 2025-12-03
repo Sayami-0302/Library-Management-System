@@ -9,6 +9,12 @@ from django.contrib.auth.hashers import make_password, check_password
 from datetime import timedelta,date
 from django.contrib import messages
 from django.urls import reverse
+import pandas as pd
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.db import transaction
+from .forms import UploadExcelForm
+from .models import Book, Category
 import json
 import csv
 import io
@@ -651,72 +657,6 @@ def rate_book(request, pk):
         'user_rating': float(br.rating),
     })
 
-def approve_request(request, request_id):
-    admin_id = request.session.get('admin_id')
-    if not admin_id:
-        return redirect('login_admin')
-
-    req = get_object_or_404(IssueRequest, pk=request_id, approved=False, rejected=False)
-    book = req.book
-    reader = req.reader
-    # Enforce per-reader limit: count currently issued books and pending requests
-    current_issued = Issue.objects.filter(reader=reader, returned_date__isnull=True).count()
-    current_pending = IssueRequest.objects.filter(reader=reader, approved=False, rejected=False).count()
-    total_count = current_issued + current_pending
-
-    # If total already exceeds the allowed maximum, reject approval
-    if total_count > MAX_ISSUED_PER_READER:
-        messages.error(request, (
-            f"Cannot approve request: {reader.name} already has {total_count} books/pending requests, "
-            f"which exceeds the limit of {MAX_ISSUED_PER_READER}."
-        ))
-        req.rejected = True
-        req.save()
-        return redirect('admin_issue_requests')
-
-    # 🚨 Check if reader already has this book issued
-    if Issue.objects.filter(reader=reader, book=book, returned_date__isnull=True).exists():
-        messages.error(request, f"{reader.name} already has '{book.name}' issued.")
-        req.rejected = True
-        req.save()
-        return redirect('admin_issue_requests')
-
-    # 🚨 Check stock availability
-    if book.number_in_stock <= 0:
-        messages.error(request, f"No copies of '{book.name}' are available.")
-        req.rejected = True
-        req.save()
-        return redirect('admin_issue_requests')
-
-    # ✅ Approve request and issue the book
-    # compute due_date depending on whether the reader is a staff member
-    issued_date = date.today()
-    if getattr(reader, 'is_staff_member', False):
-        due = issued_date + timedelta(days=182)  # ~6 months
-    else:
-        due = issued_date + timedelta(days=14)
-
-    issue = Issue.objects.create(
-        reader=reader,
-        book=book,
-        issued_date=issued_date,
-        due_date=due
-    )
-    book.number_in_stock -= 1
-    book.save()
-
-    # Create a notification for the issued book
-    create_issue_notification(issue)
-    
-    # Record issuance for analytics
-    record_book_issuance(book, issued_date=issue.issued_date)
-
-    req.approved = True
-    req.save()
-
-    messages.success(request, f"Issue request approved: '{book.name}' issued to {reader.name}.")
-    return redirect('admin_issue_requests')
-
 def issue_request(request, book_id):
     # Check if reader is logged in
     reader_id = request.session.get('reader_id')
@@ -1064,61 +1004,6 @@ def bulk_update_requests(request):
             reject_request(request, rid_int)
 
     return redirect('admin_issue_requests')
-
-
-@admin_login_required
-def import_books(request):
-    if request.method == 'POST' and request.FILES.get('file'):
-        uploaded = request.FILES['file']
-        try:
-            # Read entire file and decode; handles BOM and avoids file-wrapper quirks
-            raw = uploaded.read()
-            try:
-                text = raw.decode('utf-8-sig')
-            except AttributeError:
-                # already str
-                text = raw
-            reader = csv.DictReader(io.StringIO(text))
-            created = 0
-            for row in reader:
-                name = (row.get('name') or row.get('title') or '').strip()
-                isbn = (row.get('isbn') or '').strip()
-                if not name or not isbn:
-                    continue
-                author = (row.get('author') or '').strip()
-                cat_name = (row.get('category') or '').strip()
-                status = (row.get('status') or 'available').strip().lower() or 'available'
-                stock_raw = (row.get('number_in_stock') or row.get('stock') or '0').strip()
-                try:
-                    stock = int(stock_raw)
-                except ValueError:
-                    stock = 0
-
-                category = None
-                if cat_name:
-                    category, _ = Category.objects.get_or_create(name=cat_name)
-
-                _, created_flag = Book.objects.get_or_create(
-                    isbn=isbn,
-                    defaults={
-                        'name': name,
-                        'author': author,
-                        'category': category,
-                        'number_in_stock': stock,
-                        'status': status if status in dict(Book.STATUS_CHOICES) else 'available',
-                    }
-                )
-                if created_flag:
-                    created += 1
-            if created > 0:
-                messages.success(request, f'Imported {created} new book(s) from CSV.')
-            else:
-                messages.info(request, 'No new books were imported (all rows matched existing ISBNs or were invalid).')
-        except Exception as e:
-            messages.error(request, f'Failed to import CSV: {e}')
-        return redirect('view_books')
-
-    return render(request, 'import_books.html')
 
 
 @admin_login_required
@@ -1516,3 +1401,68 @@ def get_popular_books(limit=3, exclude_book_id=None):
     # Order by random and limit
     books = books.order_by('?')[:limit]
     return books
+@admin_login_required
+def import_books(request):
+    if request.method == "POST":
+        form = UploadExcelForm(request.POST, request.FILES)
+        if form.is_valid():
+            excel_file = request.FILES['excel_file']
+
+            try:
+                df = pd.read_excel(excel_file)
+            except Exception as e:
+                messages.error(request, f"Error reading Excel: {e}")
+                return redirect("import_books")
+
+            required_columns = [
+                "name",
+                "isbn",
+                "author",
+                "category",
+                "number_in_stock",
+                "description",
+                "rating",
+                "status",
+            ]
+
+            missing = [c for c in required_columns if c not in df.columns]
+            if missing:
+                messages.error(request, f"Missing required columns: {', '.join(missing)}")
+                return redirect("import_books")
+
+            created = 0
+            updated = 0
+
+            with transaction.atomic():
+                for idx, row in df.iterrows():
+
+                    category_name = row.get("category")
+                    category_obj = None
+                    if category_name and str(category_name).strip():
+                        category_obj, _ = Category.objects.get_or_create(
+                            name=str(category_name).strip()
+                        )
+
+                    book, was_created = Book.objects.update_or_create(
+                        isbn=str(row["isbn"]).strip(),
+                        defaults={
+                            "name": row["name"],
+                            "author": row["author"],
+                            "category": category_obj,
+                            "number_in_stock": int(row["number_in_stock"] or 0),
+                            "description": row.get("description") or "No description available",
+                            "rating": float(row.get("rating") or 4.0),
+                            "status": str(row.get("status") or "available").lower(),
+                        }
+                    )
+
+                    created += int(was_created)
+                    updated += int(not was_created)
+
+            messages.success(request, f"Books Imported Successfully! Created: {created}, Updated: {updated}")
+            return redirect("import_books")
+
+    else:
+        form = UploadExcelForm()
+
+    return render(request, "import_books.html", {"form": form})

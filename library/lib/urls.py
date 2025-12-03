@@ -1,6 +1,5 @@
 from django.urls import path
 from . import views
-
 urlpatterns=[
     path('', views.home, name='home'),
     path('features/', views.features_page, name='features'),
@@ -69,15 +68,8 @@ urlpatterns=[
     # bulk + import
     path('admin/books/import/', views.import_books, name='import_books'),
     path('admin/books/bulk-update/', views.bulk_update_books, name='bulk_update_books'),
-
     #search book
     path('ajax/search-books/', views.ajax_search_books, name='ajax_search_books'),
-    
     #analytics
     path('books/<int:pk>/analytics/', views.book_analytics_api, name='book_analytics_api'),
-
-
-
-
-
 ]

@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django import forms
 from .models import Book, Reader, Issue,Admin
-
+from django import forms
 class BookForm(forms.ModelForm):
     class Meta:
         model = Book
@@ -96,5 +96,22 @@ class AdminRegisterForm(forms.ModelForm):
             field.widget.attrs['class'] = f"{existing} sl-input w-full rounded-lg border border-slate-200 px-3 py-2 text-sm".strip()
             if not field.widget.attrs.get('placeholder'):
                 field.widget.attrs['placeholder'] = field.label
+class UploadExcelForm(forms.Form):
+    excel_file = forms.FileField(
+        label="Upload Excel (.xlsx)",
+        help_text="Upload an Excel file containing book data."
+    )
 
+    def clean_excel_file(self):
+        uploaded = self.cleaned_data.get("excel_file")
 
+        if uploaded:
+            name = uploaded.name.lower()
+            if not name.endswith(".xlsx"):
+                raise forms.ValidationError("Only .xlsx files are supported.")
+
+            max_size = 10 * 1024 * 1024  # 10 MB
+            if uploaded.size > max_size:
+                raise forms.ValidationError("File too large (max 10 MB).")
+
+        return uploaded
