@@ -1,0 +1,29 @@
+{% extends 'reader_base.html' %}
+
+{% block content %}
+<div style="margin:24px;max-width:480px;">
+  <h2 style="color:#c62828;margin-bottom:12px;">Delete Account</h2>
+  <p style="font-size:13px;color:#555;margin-bottom:16px;">
+    This will permanently delete your reader account and all associated issue records and fines. This action cannot be undone.
+  </p>
+
+  {% for message in messages %}
+    <div style="margin-bottom:10px;padding:8px 12px;border-radius:4px;background:#ffebee;color:#c62828;font-size:13px;">
+      {{ message }}
+    </div>
+  {% endfor %}
+
+  <form method="post" style="background:white;padding:16px;border-radius:8px;border:1px solid #ddd;">
+    {% csrf_token %}
+    <p style="font-size:13px;margin-bottom:12px;">
+      Are you sure you want to delete your account <strong>{{ reader.name }}</strong>?
+    </p>
+    <button type="submit" style="padding:8px 14px;border-radius:4px;border:none;background:#d32f2f;color:white;font-weight:600;cursor:pointer;">
+      Yes, delete my account
+    </button>
+    <a href="{% url 'reader_dashboard' %}" style="margin-left:8px;font-size:13px;">Cancel</a>
+  </form>
+</div>
+{% endblock %}
+
+

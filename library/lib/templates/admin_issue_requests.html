@@ -1,0 +1,78 @@
+{% extends 'admin_base.html' %}
+
+{% block content %}
+<style>
+  .view-container { margin:24px; }
+  h2 { color:#2c3e50; margin-bottom:20px; }
+  table { width:100%; border-collapse:collapse; background:white; box-shadow:0 2px 4px rgba(0,0,0,0.1); }
+  th { background:#2196F3; color:white; padding:12px; text-align:left; }
+  td { padding:12px; border-bottom:1px solid #ddd; }
+  tr:hover { background:#f5f5f5; }
+  a { text-decoration:none; margin:0 5px; }
+  .approve { color:#4CAF50; }
+  .reject { color:#d32f2f; }
+  .approve:hover, .reject:hover { text-decoration:underline; }
+  .empty { color:#999; text-align:center; padding:20px; }
+</style>
+
+<div class="view-container">
+    <h2>📋 Pending Issue Requests</h2>
+
+    {% if pending_requests %}
+        <form method="post" action="{% url 'bulk_update_requests' %}">
+            {% csrf_token %}
+            <div style="margin-bottom:10px;display:flex;gap:8px;align-items:center;">
+                <span style="font-size:13px;color:#555;">Batch action:</span>
+                <select name="action" style="padding:4px 8px;border-radius:4px;border:1px solid #ccc;">
+                    <option value="">Select...</option>
+                    <option value="approve">Approve selected</option>
+                    <option value="reject">Reject selected</option>
+                </select>
+                <button type="submit" style="padding:8px 12px;border-radius:4px;border:none;background:#2196F3;color:white;cursor:pointer;font-size:13px;">
+                    Apply
+                </button>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="select-all-requests"></th>
+                        <th>Reader</th>
+                        <th>Book</th>
+                        <th>Request Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in pending_requests %}
+                    <tr>
+                        <td><input type="checkbox" name="request_ids" value="{{ req.pk }}"></td>
+                        <td>{{ req.reader.name }}</td>
+                        <td>{{ req.book.name }}</td>
+                        <td>{{ req.request_date }}</td>
+                        <td>
+                            <a href="{% url 'approve_request' req.pk %}" class="approve">✓ Approve</a> |
+                            <a href="{% url 'reject_request' req.pk %}" class="reject">✗ Reject</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </form>
+    {% else %}
+        <div class="empty">No pending requests.</div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const selectAll = document.getElementById('select-all-requests');
+  if (!selectAll) return;
+  selectAll.addEventListener('change', function() {
+    const boxes = document.querySelectorAll('input[name="request_ids"]');
+    boxes.forEach(b => { b.checked = selectAll.checked; });
+  });
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends 'reader_base.html' %}
+
+{% block content %}
+<style>
+  .notif-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+  .notif-badge { background:#ff6b6b; color:white; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:bold; }
+  .notif-list { max-width:800px; }
+  .notif-item { border:1px solid #ddd; border-radius:6px; padding:12px; margin-bottom:8px; background:#f9f9f9; transition:background 0.2s; }
+  .notif-item.unread { background:#e3f2fd; border-left:4px solid #2196F3; }
+  .notif-item.issued { border-left:4px solid #4CAF50; }
+  .notif-item.due_soon { border-left:4px solid #ff9800; }
+  .notif-item.overdue { border-left:4px solid #ff6b6b; }
+  .notif-title { font-weight:bold; margin-bottom:4px; }
+  .notif-msg { font-size:14px; color:#555; margin-bottom:8px; }
+  .notif-time { font-size:12px; color:#999; }
+  .notif-actions { display:flex; gap:8px; margin-top:8px; }
+  .notif-actions button, .notif-actions a { font-size:12px; padding:4px 8px; }
+  .mark-btn { background:#2196F3; color:white; border:none; border-radius:3px; cursor:pointer; }
+  .mark-btn:hover { background:#1976D2; }
+  .btn-mark-all { background:#4CAF50; color:white; padding:8px 16px; border:none; border-radius:4px; cursor:pointer; }
+  .btn-mark-all:hover { background:#45a049; }
+  .no-notif { color:#999; text-align:center; padding:24px; }
+</style>
+
+<div class="notif-header">
+  <h2>Notifications
+    {% if unread_count > 0 %}
+      <span class="notif-badge">{{ unread_count }}</span>
+    {% endif %}
+  </h2>
+  {% if unread_count > 0 %}
+    <form method="post" action="{% url 'mark_all_notifications_read' %}" style="display:inline;">
+      {% csrf_token %}
+      <button type="submit" class="btn-mark-all">Mark all as read</button>
+    </form>
+  {% endif %}
+</div>
+
+<div class="notif-list">
+  {% if notifications %}
+    {% for notif in notifications %}
+      <div class="notif-item {% if not notif.read %}unread{% endif %} {{ notif.notification_type }}">
+        <div class="notif-title">{{ notif.title }}</div>
+        <div class="notif-msg">{{ notif.message }}</div>
+        <div class="notif-time">{{ notif.created_at|date:"M d, Y \a\t H:i" }}</div>
+        
+        {% if not notif.read %}
+          <div class="notif-actions">
+            <form method="post" style="display:inline;">
+              {% csrf_token %}
+              <input type="hidden" name="notification_id" value="{{ notif.id }}">
+              <button type="submit" class="mark-btn">Mark as read</button>
+            </form>
+            {% if notif.issue %}
+              <a href="{% url 'reader_book_detail' notif.issue.book.pk %}" style="background:#2196F3; color:white; padding:4px 8px; border-radius:3px; text-decoration:none;">View Book</a>
+            {% endif %}
+          </div>
+        {% else %}
+          {% if notif.issue %}
+            <div class="notif-actions">
+              <a href="{% url 'reader_book_detail' notif.issue.book.pk %}" style="background:#2196F3; color:white; padding:4px 8px; border-radius:3px; text-decoration:none;">View Book</a>
+            </div>
+          {% endif %}
+        {% endif %}
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="no-notif">
+      <p>📭 No notifications yet!</p>
+    </div>
+  {% endif %}
+</div>
+
+{% endblock %}

@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+  :root{ --bg:#E9F3FB; --card:#FFFFFF; --muted:#6B7A86; --accent:#2D6FA6; --accent-2:#6EA4D1; }
+  html,body{height:100%;}
+  body{background:linear-gradient(180deg,#F7FBFF 0%,var(--bg) 100%);font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;margin:0;color:#213044}
+
+  /* Home wrapper fills viewport and prevents page scrolling */
+  .home-wrapper{min-height:calc(100vh - 120px); /* header+footer area */ display:flex;flex-direction:column;justify-content:flex-start;align-items:center;overflow:hidden;padding:28px 12px}
+
+  .home-card{width:100%;max-width:1100px;display:grid;grid-template-columns:1fr 420px;gap:28px;align-items:start}
+
+  .hero{background:var(--card);padding:28px;border-radius:16px;box-shadow:0 10px 30px rgba(33,48,68,0.08);border:1px solid rgba(45,58,69,0.04)}
+  .hero h2{font-size:30px;margin:0 0 8px;color:#16324a}
+  .hero p{margin:0 0 16px;color:var(--muted);line-height:1.5}
+
+  /* Search + actions */
+  .hero .search-row{display:flex;gap:10px;margin-top:12px}
+  .search-row > div{flex:1;min-width:0}
+  .search-input{width:100%;flex:1;padding:14px 16px;border-radius:12px;border:1px solid rgba(33,48,68,0.06);font-size:16px}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;border:none;cursor:pointer;font-weight:600;transition:all 0.2s ease}
+  .btn-primary{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:white;box-shadow:0 6px 18px rgba(45,111,166,0.18)}
+  .btn-primary:hover:not(:disabled){box-shadow:0 8px 24px rgba(45,111,166,0.25);transform:translateY(-2px)}
+  .btn-primary:active:not(:disabled){transform:translateY(0)}
+  .btn-ghost{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:white;box-shadow:0 6px 18px rgba(45,111,166,0.18)}
+  .btn-ghost:hover:not(:disabled){box-shadow:0 8px 24px rgba(45,111,166,0.25);transform:translateY(-2px)}
+  .btn-ghost:active:not(:disabled){transform:translateY(0)}
+  .btn:disabled{opacity:0.7;cursor:not-allowed;pointer-events:none}
+
+  /* Right column image + new arrivals */
+  .side{display:flex;flex-direction:column;gap:16px}
+  .library-image{background:linear-gradient(180deg,rgba(110,164,209,0.12),rgba(45,111,166,0.06));padding:10px;border-radius:12px;display:flex;align-items:center;justify-content:center}
+  .library-image img{width:100%;height:auto;border-radius:10px;display:block;max-height:260px;object-fit:cover}
+
+  .new-arrivals{background:var(--card);padding:16px;border-radius:12px;border:1px solid rgba(33,48,68,0.04);box-shadow:0 6px 18px rgba(33,48,68,0.04)}
+  .new-arrivals h3{margin:0 0 10px 0;color:#16324a}
+  .arrivals-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .arrival-card{background:linear-gradient(180deg,#FFFFFF,#F7FBFF);padding:10px;border-radius:8px;border:1px solid rgba(33,48,68,0.03);display:flex;flex-direction:column;height:120px}
+  .arrival-card .thumb{flex:0 0 60px;border-radius:6px;overflow:hidden;margin-bottom:8px}
+  .arrival-card img{width:100%;height:100%;object-fit:cover}
+  .arrival-title{font-size:14px;font-weight:700;color:#16324a;margin:0}
+  .arrival-author{font-size:12px;color:var(--muted)}
+
+  /* suggestions styling */
+  /* suggestions styling (rich list with thumbnail, title, excerpt, author) */
+  #search-suggestions .suggestion-item{display:flex;align-items:flex-start;padding:12px;border-radius:8px;text-decoration:none;color:inherit;gap:12px}
+  #search-suggestions .suggestion-item img{width:48px;height:64px;object-fit:cover;border-radius:4px;flex-shrink:0}
+  #search-suggestions .suggestion-meta{flex:1}
+  #search-suggestions .suggestion-title{font-weight:700;color:#16324a;margin-bottom:6px}
+  #search-suggestions .suggestion-desc{font-size:13px;color:#6b7a86;line-height:1.3;margin-bottom:6px}
+  #search-suggestions .suggestion-author{font-size:12px;color:#95a1aa}
+  #search-suggestions mark{background:linear-gradient(90deg,#fff6d6,#fff1b3);padding:0 2px;border-radius:2px}
+  #search-suggestions .suggestion-list{background:white;border:1px solid rgba(33,48,68,0.06);box-shadow:0 10px 28px rgba(33,48,68,0.08);border-radius:10px;padding:6px;max-height:400px;overflow:auto}
+  #search-suggestions .suggestion-item:hover{background:linear-gradient(90deg,#f7fbff,#eef7ff)}
+  /* make focused suggestion item visually clear */
+  #search-suggestions .suggestion-item:focus{box-shadow:0 0 0 4px rgba(45,111,166,0.12);border-radius:8px;outline:none}
+
+  /* Footer space (to keep content in view) */
+  .home-footer-space{height:12px}
+
+  @media (max-width:1000px){.home-card{grid-template-columns:1fr}.side{order:2}.hero{order:1}}
+  @media (max-width:600px){.arrivals-grid{grid-template-columns:1fr}.home-wrapper{padding:16px}}
+</style>
+
+<div class="home-wrapper">
+  <div class="home-card">
+    <div class="hero">
+      <h2>Welcome to My Library</h2>
+      <p>Discover new arrivals, borrow easily, and manage your account — all in one place.</p>
+
+      <form class="search-row" id="hero-search-form" method="get" action="{% url 'public_books' %}">
+        <select name="category" id="hero-search-category" style="border-radius:10px;padding:10px 12px;border:1px solid rgba(33,48,68,0.06);background:white;margin-right:8px">
+          <option value="">All</option>
+          {% for c in categories %}
+            <option value="{{ c.id }}">{{ c.name }}</option>
+          {% endfor %}
+        </select>
+        <div style="position:relative;flex:1">
+          <input type="search" id="hero-search-input" name="q" class="search-input" autocomplete="off" placeholder="Search books, authors, ISBN...">
+          <div id="search-suggestions" style="display:none;position:absolute;left:0;right:0;top:54px;z-index:1200"></div>
+          <div id="search-warning" style="display:none;color:#b33;margin-top:8px;font-size:13px"></div>
+        </div>
+        <button class="btn btn-primary" id="hero-search-btn" type="submit">Search</button>
+        <a class="btn btn-primary" id="hero-browse-btn" href="{% url 'public_books' %}" data-page="public_books">Browse</a>
+      </form>
+    </div>
+
+    <div class="side">
+      <div class="library-image">
+        <img src="{% static 'images/library_home.png' %}" alt="Library">
+      </div>
+
+      <div class="new-arrivals" aria-live="polite">
+        <h3>New Arrivals</h3>
+        <div class="arrivals-grid">
+          {% for book in books %}
+          <div class="arrival-card">
+            <div class="thumb">
+              {% if book.image %}
+                <img src="{{ book.image.url }}" alt="{{ book.name }}">
+              {% else %}
+                <img src="{% static 'images/placeholder_book.png' %}" alt="no image">
+              {% endif %}
+            </div>
+            <div>
+              <div class="arrival-title">{{ book.name|truncatechars:40 }}</div>
+              <div class="arrival-author">{{ book.author|default:'Unknown' }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="home-footer-space"></div>
+</div>
+
+{% endblock %}
+
+  {% block extra_js %}
+  <script>
+  // Debounce helper
+  function debounce(fn, wait){let t; return function(...args){clearTimeout(t); t=setTimeout(()=>fn.apply(this,args), wait);};}
+
+  const input = document.getElementById('hero-search-input');
+  const suggestions = document.getElementById('search-suggestions');
+  const form = document.getElementById('hero-search-form');
+  const warning = document.getElementById('search-warning');
+  const categorySelect = document.getElementById('hero-search-category');
+
+  function escapeHtml(s){return s.replace(/[&<>\"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+  function highlightText(text, q){
+    if(!q) return escapeHtml(text);
+    try{const re=new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','ig');
+      return escapeHtml(text).replace(re, '<mark>$1</mark>');
+    }catch(e){return escapeHtml(text);} 
+  }
+
+  async function fetchSuggestions(q){
+    const url = new URL('{% url "ajax_search_books" %}', window.location.origin);
+    url.searchParams.set('q', q);
+    url.searchParams.set('limit', '8');
+    const cat = categorySelect ? categorySelect.value : '';
+    if(cat) url.searchParams.set('category', cat);
+    try{
+      const res = await fetch(url);
+      if(!res.ok) return [];
+      const data = await res.json();
+      return data.books || [];
+    }catch(e){return [];}
+  }
+
+  function renderSuggestions(items, q){
+    if(!items.length){ suggestions.style.display='none'; suggestions.innerHTML=''; return; }
+    const html = items.slice(0,8).map(b=>{
+      const img = b.image ? `<img src="${escapeHtml(b.image)}">` :
+                  `<div style="width:48px;height:64px;background:#f0f4f8;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#6b7a86">📘</div>`;
+      const name = highlightText(b.name || '', q);
+      const desc = highlightText((b.description||''), q);
+      const author = highlightText(b.author || '', q);
+      const url = escapeHtml(b.url || ('{% url "book_details" 0 %}'.replace('/0/','/'+b.pk+'/')));
+      return `<a href="${url}" class="suggestion-item"><div>${img}</div><div class="suggestion-meta"><div class="suggestion-title">${name}</div><div class="suggestion-desc">${desc}</div><div class="suggestion-author">by ${author}</div></div></a>`;
+    }).join('');
+    suggestions.innerHTML = `<div class="suggestion-list">${html}</div>`;
+    suggestions.style.display = 'block';
+
+    // attach hover preview for each suggestion item (call shared preview)
+    Array.from(suggestions.querySelectorAll('.suggestion-item')).forEach((el, idx) => {
+      // make focusable
+      el.setAttribute('tabindex', '0');
+      el.addEventListener('mouseenter', (ev) => {
+        const b = items[idx];
+        const rect = el.getBoundingClientRect();
+        if(window.showHoverPreview){
+          window.showHoverPreview({name: b.name, author: b.author, desc: b.description || b.description || '', image: b.image || ''}, {x: rect.right, y: rect.top}, input.value.trim());
+        }
+      });
+      el.addEventListener('mouseleave', (ev) => { if(window.hideHoverPreview) window.hideHoverPreview(); });
+      // move preview with mouse for smoother placement
+      el.addEventListener('mousemove', (ev) => { if(window.moveHoverPreview) window.moveHoverPreview({x: ev.clientX, y: ev.clientY}); });
+
+      // show preview on focus
+      el.addEventListener('focus', (ev) => {
+        const b = items[idx];
+        const rect = el.getBoundingClientRect();
+        if(window.showHoverPreview){ window.showHoverPreview({name: b.name, author: b.author, desc: b.description || '', image: b.image || ''}, {x: rect.right, y: rect.top}, input.value.trim()); }
+      });
+      el.addEventListener('blur', (ev) => { if(window.hideHoverPreview) window.hideHoverPreview(); });
+
+      // keyboard navigation within suggestion list
+      el.addEventListener('keydown', (ev) => {
+        if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {
+          ev.preventDefault();
+          const all = Array.from(suggestions.querySelectorAll('.suggestion-item'));
+          const cur = all.indexOf(el);
+          const next = ev.key === 'ArrowDown' ? all[cur+1] : all[cur-1];
+          if (next) next.focus();
+        } else if (ev.key === 'Enter') {
+          // follow link
+          el.click();
+        }
+      });
+    });
+  }
+
+  const debounced = debounce(async function(){
+    const q = input.value.trim();
+    if(!q){ suggestions.style.display='none'; suggestions.innerHTML=''; return; }
+    const items = await fetchSuggestions(q);
+    renderSuggestions(items, q);
+  }, 220);
+
+  input.addEventListener('input', ()=>{ warning.style.display='none'; debounced(); });
+
+  // Also fetch suggestions on focus if there's content
+  input.addEventListener('focus', ()=>{ if(input.value.trim()) debounced(); });
+
+  // Hide suggestions on outside click
+  document.addEventListener('click', (e)=>{
+    if(!form.contains(e.target)){
+      suggestions.style.display='none';
+    }
+  });
+
+  // Prevent empty searches and show warning
+  form.addEventListener('submit', (e)=>{
+  const q = input.value.trim();
+  if(!q){ e.preventDefault(); warning.textContent = 'Empty Keyword.'; warning.style.display='block'; input.focus(); }
+});
+
+  // Disable Browse button if already on public_books page
+  document.addEventListener('DOMContentLoaded', function() {
+    const currentPath = window.location.pathname.replace(/\/$/, '');
+    const browseBtn = document.getElementById('hero-browse-btn');
+    
+    if (browseBtn) {
+      const browseHref = browseBtn.getAttribute('href').replace(/\/$/, '');
+      if (currentPath.includes(browseHref)) {
+        browseBtn.disabled = true;
+        browseBtn.style.opacity = '0.7';
+        browseBtn.style.cursor = 'not-allowed';
+        browseBtn.style.pointerEvents = 'none';
+      }
+    }
+  });
+
+  </script>
+  {% endblock %}

@@ -1,0 +1,326 @@
+<form id="book-search-form" method="get" action="{% url 'public_books' %}" style="position: relative; display:flex; gap:8px; align-items:center;">
+    <input type="text" name="q" id="book-search-input" placeholder="Search books..." autocomplete="off" style="flex:1;" value="{{ query|default:'' }}">
+    <div style="display:flex;align-items:center;gap:8px;">
+        <label for="filter-category-select" style="margin-right:6px;">Category</label>
+        <select id="filter-category-select" name="category">
+            <option value="">All Categories</option>
+            {% if categories %}
+                {% for cat in categories %}
+                    <option value="{{ cat.id }}" {% if selected_category|stringformat:'s' == cat.id|stringformat:'s' %}selected{% endif %}>{{ cat.name }}</option>
+                {% endfor %}
+            {% endif %}
+        </select>
+    </div>
+
+</form>
+
+<!-- Removed inline dropdown suggestions per user request. Keeping only the search input and category select. -->
+<style>
+mark.highlight { background: #ffeb3b; padding: 0 2px; border-radius:2px; }
+
+/* Focus & accessibility styles for rows and preview */
+table tbody tr:focus { outline: 3px solid rgba(45,111,166,0.16); outline-offset: -2px; background: rgba(45,111,166,0.03); }
+table tbody tr { transition: background .12s ease; }
+
+/* Preview transitions */
+#book-hover-preview { transition: transform .12s ease, opacity .12s ease; }
+
+/* Make suggestion items visibly focusable (used on homepage suggestion list) */
+.suggestion-item:focus { box-shadow: 0 0 0 4px rgba(45,111,166,0.12); border-radius:8px; outline:none; }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const input = document.getElementById('book-search-input');
+    const categorySelect = document.getElementById('filter-category-select');
+
+    // Removed suggestion dropdown fetch; we only keep client-side highlighting for existing tables.
+    // The AJAX live search used on the dedicated search page still calls /ajax/search-books/.
+    // This partial no longer performs its own fetch or renders inline suggestions.
+
+    // Client-side live highlighting in existing result tables
+    // Debounced so it doesn't run excessively
+    function debounce(fn, delay) {
+        let t;
+        return function(...args) {
+            clearTimeout(t);
+            t = setTimeout(() => fn.apply(this, args), delay);
+        };
+    }
+
+    // Escape regex special chars
+    function escapeRegExp(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    // Highlight matches inside table cells for relevant columns
+    function highlightInTables(query) {
+        // normalize
+        const q = (query || '').trim();
+        // find all tables on page that contain search results
+        const tables = document.querySelectorAll('table');
+        tables.forEach(table => {
+            const thead = table.querySelector('thead');
+            if (!thead) return;
+            // map header text to index
+            const headers = Array.from(thead.querySelectorAll('th')).map(th => th.textContent.trim().toLowerCase());
+            // columns we want to highlight if present
+            const targets = [];
+            ['name','author','category','description','book name'].forEach(key => {
+                const idx = headers.findIndex(h => h.includes(key));
+                if (idx > -1) targets.push(idx);
+            });
+
+            if (targets.length === 0) return;
+
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                targets.forEach(i => {
+                    if (i >= cells.length) return;
+                    const cell = cells[i];
+                        // store original html to avoid removing links/markup when re-rendering
+                        if (!cell.dataset.originalHtml) {
+                            cell.dataset.originalHtml = cell.innerHTML;
+                        }
+                        const originalHtml = cell.dataset.originalHtml;
+                        if (!q) {
+                            cell.innerHTML = originalHtml;
+                            return;
+                        }
+                        // restore original HTML first (so attributes/structure are preserved)
+                        cell.innerHTML = originalHtml;
+                        if (!q) return;
+                        const pattern = new RegExp(escapeRegExp(q), 'ig');
+
+                        // Highlight only text nodes (do not touch attribute values like href)
+                        function highlightTextNodes(el) {
+                            const childNodes = Array.from(el.childNodes);
+                            childNodes.forEach(node => {
+                                if (node.nodeType === Node.TEXT_NODE) {
+                                    const text = node.nodeValue;
+                                    let lastIndex = 0;
+                                    const fragments = [];
+                                    let m;
+                                    while ((m = pattern.exec(text)) !== null) {
+                                        const idx = m.index;
+                                        if (idx > lastIndex) fragments.push(document.createTextNode(text.slice(lastIndex, idx)));
+                                        const mark = document.createElement('mark');
+                                        mark.className = 'highlight';
+                                        mark.textContent = m[0];
+                                        fragments.push(mark);
+                                        lastIndex = idx + m[0].length;
+                                    }
+                                    if (fragments.length) {
+                                        fragments.push(document.createTextNode(text.slice(lastIndex)));
+                                        fragments.forEach(f => el.insertBefore(f, node));
+                                        el.removeChild(node);
+                                    }
+                                } else if (node.nodeType === Node.ELEMENT_NODE) {
+                                    // Recurse into child elements but skip script/style tags
+                                    const tag = node.tagName && node.tagName.toLowerCase();
+                                    if (tag !== 'script' && tag !== 'style') {
+                                        highlightTextNodes(node);
+                                    }
+                                }
+                            });
+                        }
+
+                        try {
+                            highlightTextNodes(cell);
+                        } catch (e) {
+                            // fallback: if something goes wrong, revert to original replace behaviour on HTML string
+                            const highlighted = originalHtml.replace(pattern, match => `<mark class="highlight">${match}</mark>`);
+                            cell.innerHTML = highlighted;
+                        }
+                });
+                    });
+
+            // After highlighting, move rows that contain matches (mark.highlight) to the top
+            try {
+                const tbody = table.querySelector('tbody');
+                if (tbody) {
+                    const allRows = Array.from(tbody.querySelectorAll('tr'));
+                    const matchedRows = allRows.filter(r => r.querySelector('mark.highlight'));
+                    const otherRows = allRows.filter(r => !r.querySelector('mark.highlight'));
+                    // append matched first, then others (preserves relative order)
+                    matchedRows.forEach(r => tbody.appendChild(r));
+                    otherRows.forEach(r => tbody.appendChild(r));
+                }
+            } catch (e) {
+                // no-op on errors
+            }
+        });
+    }
+
+    // simple HTML escape
+    function escapeHtml(str) {
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    const debouncedHighlight = debounce(function() {
+        highlightInTables(input.value);
+    }, 180);
+
+    // wire highlighting alongside fetchBooks (both listen to input)
+    input.addEventListener('input', debouncedHighlight);
+
+    // Category filtering: hide/show rows based on data-category-id attribute
+    if (categorySelect) {
+        categorySelect.addEventListener('change', function() {
+            const val = this.value;
+            const rows = document.querySelectorAll('table tbody tr');
+            rows.forEach(r => {
+                const cat = r.getAttribute('data-category-id') || '';
+                if (!val) {
+                    r.style.display = '';
+                } else {
+                    r.style.display = (cat === val) ? '' : 'none';
+                }
+            });
+        });
+    }
+
+        // Make table rows focusable for keyboard navigation and show preview on focus
+        function initRowFocus() {
+            const rows = document.querySelectorAll('table tbody tr');
+            rows.forEach(r => {
+                if (!r.hasAttribute('tabindex')) r.setAttribute('tabindex', '0');
+            });
+        }
+        initRowFocus();
+
+        // Delegate keyboard navigation for rows
+        document.addEventListener('keydown', function(e) {
+            const active = document.activeElement;
+            if (!active) return;
+            // Handle arrows within table rows
+            if (active.tagName && active.tagName.toLowerCase() === 'tr') {
+                if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    const rows = Array.from(document.querySelectorAll('table tbody tr')).filter(r => r.style.display !== 'none');
+                    const idx = rows.indexOf(active);
+                    if (idx === -1) return;
+                    const next = e.key === 'ArrowDown' ? rows[idx + 1] : rows[idx - 1];
+                    if (next) next.focus();
+                } else if (e.key === 'Enter') {
+                    // follow first link in the row
+                    const link = active.querySelector('a');
+                    if (link) link.click();
+                }
+            }
+        }, true);
+
+        // Show preview when a row receives focus, hide on blur
+        document.addEventListener('focusin', function(e) {
+            const row = e.target.closest('table tbody tr');
+            if (!row) return;
+            const name = row.getAttribute('data-name') || '';
+            const author = row.getAttribute('data-author') || '';
+            const desc = row.getAttribute('data-desc') || '';
+            const image = row.getAttribute('data-image') || '';
+            const rect = row.getBoundingClientRect();
+            if (window.showHoverPreview) {
+                window.showHoverPreview({name, author, desc, image}, {x: rect.right, y: rect.top}, document.querySelector('input[name="q"]') ? document.querySelector('input[name="q"]').value : '');
+            }
+        });
+        document.addEventListener('focusout', function(e) {
+            const row = e.target.closest('table tbody tr');
+            if (!row) return;
+            // hide preview when focus leaves the row
+            const related = e.relatedTarget;
+            if (!related || !row.contains(related)) {
+                if (window.hideHoverPreview) window.hideHoverPreview();
+            }
+        });
+
+    // No inline suggestion box to clear anymore.
+});
+</script>
+
+<script>
+// Floating preview component (shared)
+(function(){
+    let previewEl = null;
+    function createPreview(){
+        previewEl = document.createElement('div');
+        previewEl.id = 'book-hover-preview';
+        previewEl.style.position = 'fixed';
+        previewEl.style.zIndex = 2000;
+        previewEl.style.minWidth = '320px';
+        previewEl.style.maxWidth = '420px';
+        previewEl.style.background = 'white';
+        previewEl.style.border = '1px solid rgba(33,48,68,0.08)';
+        previewEl.style.boxShadow = '0 12px 36px rgba(33,48,68,0.12)';
+        previewEl.style.borderRadius = '10px';
+        previewEl.style.padding = '12px';
+        previewEl.style.display = 'none';
+        previewEl.style.pointerEvents = 'none';
+        document.body.appendChild(previewEl);
+    }
+
+    function setPreviewContent(data, query){
+        const img = data.image ? `<img src="${escapeHtml(data.image)}" style="width:72px;height:96px;object-fit:cover;border-radius:6px;margin-right:12px;flex-shrink:0">` :
+                                `<div style="width:72px;height:96px;background:#f0f4f8;border-radius:6px;margin-right:12px;display:flex;align-items:center;justify-content:center;color:#6b7a86">📘</div>`;
+        const title = highlightText(data.name||'', query);
+        const desc = highlightText(data.desc||'', query);
+        const author = highlightText(data.author||'', query);
+        previewEl.innerHTML = `
+            <div style="display:flex;gap:12px">
+                ${img}
+                <div style="flex:1;min-width:0">
+                    <div style="font-weight:800;color:#16324a;margin-bottom:6px">${title}</div>
+                    <div style="font-size:13px;color:#6b7a86;margin-bottom:8px">${desc}</div>
+                    <div style="font-size:13px;color:#95a1aa">by ${author}</div>
+                </div>
+            </div>
+        `;
+    }
+
+    function escapeHtml(s){ return (s||'').toString().replace(/[&<>\"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+    function highlightText(text, q){ if(!q) return escapeHtml(text); try{const re=new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','ig'); return escapeHtml(text).replace(re,'<mark>$1</mark>'); }catch(e){return escapeHtml(text);} }
+
+    function showPreviewAt(x,y){
+        if(!previewEl) createPreview();
+        previewEl.style.left = Math.min(window.innerWidth - previewEl.offsetWidth - 12, x + 12) + 'px';
+        previewEl.style.top = Math.min(window.innerHeight - previewEl.offsetHeight - 12, y + 12) + 'px';
+        previewEl.style.display = 'block';
+    }
+    function hidePreview(){ if(previewEl) previewEl.style.display = 'none'; }
+
+    // Expose globally for other scripts (home suggestions) to call
+    window.showHoverPreview = function(data, pos, query){ if(!previewEl) createPreview(); setPreviewContent(data, query||''); // position after setting content to get offset
+        // small delay to allow rendering measurements
+        requestAnimationFrame(()=> showPreviewAt(pos.x, pos.y)); };
+    window.moveHoverPreview = function(pos){ if(previewEl && previewEl.style.display!=='none') showPreviewAt(pos.x, pos.y); };
+    window.hideHoverPreview = hidePreview;
+
+    // Attach hover listeners to table rows
+    document.addEventListener('mouseover', function(e){
+        const row = e.target.closest('table tbody tr');
+        if(!row) return;
+        // ignore header if clicked
+        if(!row.parentElement) return;
+        const name = row.getAttribute('data-name') || '';
+        const author = row.getAttribute('data-author') || '';
+        const desc = row.getAttribute('data-desc') || '';
+        const image = row.getAttribute('data-image') || '';
+        const rect = e.target.getBoundingClientRect();
+        window.showHoverPreview({name,author,desc,image}, {x: rect.right, y: rect.top}, document.querySelector('input[name="q"]') ? document.querySelector('input[name="q"]').value : '');
+    }, {passive:true});
+
+    document.addEventListener('mouseout', function(e){
+        const row = e.target.closest('table tbody tr');
+        if(!row) return;
+        // hide when leaving the row entirely
+        const to = e.relatedTarget;
+        if(!to || !row.contains(to)){
+            window.hideHoverPreview();
+        }
+    }, {passive:true});
+
+    // also reposition preview on mousemove for a nicer feel
+    document.addEventListener('mousemove', function(e){ if(previewEl && previewEl.style.display!=='none'){ window.moveHoverPreview({x:e.clientX,y:e.clientY}); } }, {passive:true});
+
+})();
+</script>

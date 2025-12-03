@@ -1,0 +1,45 @@
+{% extends 'admin_base.html' %}
+
+{% block content %}
+<style>
+  .fine-container { max-width:600px; margin:24px auto; padding:20px; background:#f9f9f9; border-radius:8px; }
+  h2 { color:#2c3e50; margin-bottom:24px; }
+  .fine-info { background:white; padding:16px; border-radius:4px; margin-bottom:20px; border-left:4px solid #ff9800; }
+  .info-item { margin:8px 0; line-height:1.6; }
+  .amount { font-size:18px; font-weight:bold; color:#d32f2f; }
+  .button-group { display:flex; gap:12px; margin-top:20px; }
+  button, a { padding:10px 20px; border-radius:4px; border:none; cursor:pointer; text-decoration:none; font-size:14px; }
+  button[type="submit"] { background:#4CAF50; color:white; }
+  a { background:#2196F3; color:white; }
+  .paid-msg { background:#c8e6c9; color:#2e7d32; padding:12px; border-radius:4px; border-left:4px solid #4CAF50; }
+</style>
+
+<div class="fine-container">
+    <h2>💳 Pay Fine</h2>
+
+    <div class="fine-info">
+        <div class="info-item"><strong>Reader:</strong> {{ fine.issue.reader.name }}</div>
+        <div class="info-item"><strong>Book:</strong> {{ fine.issue.book.name }}</div>
+        <div class="info-item"><strong class="amount">Amount: ₹{{ fine.amount }}</strong></div>
+        <div class="info-item"><strong>Calculated Date:</strong> {{ fine.calculated_date }}</div>
+    </div>
+
+    {% if fine.paid %}
+        <div class="paid-msg">
+            <strong>✓ Already Paid</strong>
+        </div>
+        <div style="margin-top:20px;">
+            <a href="{% url 'view_fines' %}" style="background:#2196F3;color:white;">Back to Fines</a>
+        </div>
+    {% else %}
+        <form method="post">
+            {% csrf_token %}
+            <div class="button-group">
+                <button type="submit">Mark as Paid</button>
+                <a href="{% url 'view_fines' %}">Cancel</a>
+            </div>
+        </form>
+    {% endif %}
+</div>
+
+{% endblock %}

@@ -1,0 +1,243 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+  :root{
+    --sl-accent: #2D6FA6;
+    --sl-accent-2: #6EA4D1;
+  }
+
+  .sl-fade-up {
+    opacity: 0;
+    transform: translateY(18px);
+    animation: sl-fade-up 0.7s ease-out forwards;
+  }
+  .sl-fade-up-delayed {
+    opacity: 0;
+    transform: translateY(18px);
+    animation: sl-fade-up 0.9s ease-out forwards;
+    animation-delay: 0.08s;
+  }
+
+  @keyframes sl-fade-up {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .sl-gradient-shell {
+    background: radial-gradient(circle at top left, rgba(76, 175, 255, 0.26), transparent 60%),
+                radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.18), transparent 55%);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+  <!-- Single-screen hero with search -->
+  <section id="hero" class="pt-8 sm:pt-10 lg:pt-12">
+    <div class="grid gap-8 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] items-center min-h-[60vh]">
+      <!-- Left: text + search -->
+      <div class="space-y-6 sl-fade-up">
+        <span class="inline-flex items-center gap-2 rounded-full border border-sky-100 bg-sky-50/80 px-3 py-1 text-[11px] font-semibold tracking-[0.16em] text-sky-700 uppercase">
+          SMART LIBRARY PLATFORM
+        </span>
+
+        <div class="space-y-3">
+          <h1 class="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-slate-900">
+            Manage Your <span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-500 to-indigo-500">Library Effortlessly</span>
+          </h1>
+          <p class="text-sm sm:text-base text-slate-600 max-w-xl leading-relaxed">
+            Search, discover, and manage books in a few keystrokes — optimized for schools, colleges, and public libraries.
+          </p>
+        </div>
+
+        <!-- Search bar -->
+        <div class="mt-2">
+          <form id="hero-search-form" method="get" action="{% url 'public_books' %}" class="flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-center">
+            <div class="flex items-center gap-2 flex-1">
+              <label for="hero-search-category" class="hidden sm:inline text-[11px] font-medium text-slate-600">Category</label>
+              <select name="category" id="hero-search-category"
+                      class="w-32 sm:w-40 rounded-xl border border-slate-200 bg-white px-2.5 py-2 text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-sky-400">
+                <option value="">All</option>
+                {% for c in categories %}
+                  <option value="{{ c.id }}">{{ c.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="relative flex-1">
+              <input type="search" id="hero-search-input" name="q"
+                     class="w-full rounded-xl border border-slate-200 bg-white/90 px-3.5 py-2.5 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-sky-400"
+                     autocomplete="off"
+                     placeholder="Search by book name, author, ISBN, or category">
+              <div id="search-suggestions"
+                   class="absolute left-0 right-0 mt-2 z-20"
+                   style="display:none;"></div>
+              <div id="search-warning" class="mt-1 text-xs text-rose-600" style="display:none;"></div>
+            </div>
+            <button class="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-sky-500 to-indigo-500 px-4 sm:px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:shadow-lg hover:from-sky-600 hover:to-indigo-600 transition-transform transform hover:-translate-y-0.5"
+                    id="hero-search-btn"
+                    type="submit">
+              Search
+            </button>
+          </form>
+          <p class="mt-1.5 text-[11px] text-slate-500">
+            Tip: Try typing <span class="font-semibold">A</span> — books like <span class="font-semibold">Atomic Habits</span> will appear before other matches.
+          </p>
+        </div>
+
+        <!-- Quick stats -->
+        <dl class="mt-3 grid grid-cols-2 sm:flex sm:flex-wrap gap-4 text-xs text-slate-500">
+          <div class="space-y-0.5">
+            <dt>Smart search</dt>
+            <dd class="font-semibold text-slate-800">Name, ISBN, author &amp; category</dd>
+          </div>
+          <div class="space-y-0.5">
+            <dt>Role-based access</dt>
+            <dd class="font-semibold text-slate-800">Admin &amp; Reader</dd>
+          </div>
+        </dl>
+      </div>
+
+      <!-- Right: compact visual -->
+      <div class="sl-fade-up-delayed">
+        <div class="relative sl-gradient-shell rounded-3xl border border-sky-100/70 bg-white/70 p-4 shadow-lg shadow-sky-100/80">
+          <div class="absolute -top-4 -left-4 h-12 w-12 rounded-2xl bg-sky-100/80 blur-xl"></div>
+          <div class="absolute -bottom-6 -right-3 h-14 w-14 rounded-3xl bg-indigo-100/80 blur-xl"></div>
+
+          <div class="relative rounded-2xl bg-slate-950/95 p-3 sm:p-4">
+            <div class="flex items-center justify-between pb-2">
+              <div class="flex items-center gap-1.5">
+                <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+                <span class="h-1.5 w-1.5 rounded-full bg-amber-300"></span>
+                <span class="h-1.5 w-1.5 rounded-full bg-rose-400"></span>
+              </div>
+              <span class="rounded-full bg-white/5 px-3 py-0.5 text-[10px] font-medium uppercase tracking-[0.22em] text-slate-300">
+                Search preview
+              </span>
+            </div>
+
+            <div class="rounded-xl border border-slate-800/90 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-3 space-y-3 text-[11px] text-slate-200">
+              <p class="text-slate-300/80">
+                Instant suggestions as you type, with highlighted keywords and relevance‑based ordering.
+              </p>
+              <div class="space-y-1">
+                <div class="flex items-center justify-between">
+                  <span class="text-sky-300/90">Atomic Habits</span>
+                  <span class="text-slate-400">⭐ 4.8</span>
+                </div>
+                <div class="flex items-center justify-between text-slate-400">
+                  <span>Rich Dad Poor Dad</span>
+                  <span>⭐ 4.6</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="relative mt-3 rounded-2xl border border-sky-100/80 bg-white/80 shadow-md overflow-hidden">
+            <img src="{% static 'images/library_home.png' %}"
+                 alt="SmartLibrary dashboard preview"
+                 class="w-full h-40 object-cover">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Debounce helper
+function debounce(fn, wait){let t; return function(...args){clearTimeout(t); t=setTimeout(()=>fn.apply(this,args), wait);};}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const input = document.getElementById('hero-search-input');
+  const suggestions = document.getElementById('search-suggestions');
+  const form = document.getElementById('hero-search-form');
+  const warning = document.getElementById('search-warning');
+  const categorySelect = document.getElementById('hero-search-category');
+
+  if (!input || !suggestions || !form) return;
+
+  function escapeHtml(s){return (s||'').toString().replace(/[&<>\"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+  function highlightText(text, q){
+    if(!q) return escapeHtml(text);
+    try{
+      const re=new RegExp('('+q.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\\\$&')+')','ig');
+      return escapeHtml(text).replace(re, '<mark>$1</mark>');
+    }catch(e){return escapeHtml(text);}
+  }
+
+  async function fetchSuggestions(q){
+    const url = new URL('{% url "ajax_search_books" %}', window.location.origin);
+    url.searchParams.set('q', q);
+    url.searchParams.set('limit', '8');
+    const cat = categorySelect ? categorySelect.value : '';
+    if(cat) url.searchParams.set('category', cat);
+    try{
+      const res = await fetch(url);
+      if(!res.ok) return [];
+      const data = await res.json();
+      return data.books || [];
+    }catch(e){return [];}
+  }
+
+  function renderSuggestions(items, q){
+    if(!items.length){ suggestions.style.display='none'; suggestions.innerHTML=''; return; }
+    const html = items.slice(0,8).map(b=>{
+      const img = b.image ? `<img src="${escapeHtml(b.image)}" class="w-12 h-16 object-cover rounded-md">` :
+                  `<div class="w-12 h-16 rounded-md bg-slate-100 flex items-center justify-center text-slate-500 text-lg">📘</div>`;
+      const name = highlightText(b.name || '', q);
+      const desc = highlightText((b.description||''), q);
+      const author = highlightText(b.author || '', q);
+      const url = escapeHtml(b.url || ('{% url "book_details" 0 %}'.replace('/0/','/'+b.pk+'/')));
+      return `
+        <a href="${url}" class="suggestion-item flex gap-3 px-2.5 py-2 rounded-lg hover:bg-slate-50 no-underline text-slate-900">
+          <div>${img}</div>
+          <div class="suggestion-meta flex-1 min-w-0">
+            <div class="suggestion-title text-xs font-semibold mb-1">${name}</div>
+            <div class="suggestion-desc text-[11px] text-slate-500 line-clamp-2 mb-1">${desc}</div>
+            <div class="suggestion-author text-[11px] text-slate-400">by ${author}</div>
+          </div>
+        </a>`;
+    }).join('');
+    suggestions.innerHTML = `<div class="suggestion-list rounded-xl border border-slate-200 bg-white shadow-xl max-h-80 overflow-auto py-1.5">${html}</div>`;
+    suggestions.style.display = 'block';
+  }
+
+  const debounced = debounce(async function(){
+    const q = input.value.trim();
+    if(!q){ suggestions.style.display='none'; suggestions.innerHTML=''; return; }
+    const items = await fetchSuggestions(q);
+    renderSuggestions(items, q);
+  }, 220);
+
+  input.addEventListener('input', ()=>{ warning.style.display='none'; debounced(); });
+
+  // Also fetch suggestions on focus if there's content
+  input.addEventListener('focus', ()=>{ if(input.value.trim()) debounced(); });
+
+  // Hide suggestions on outside click
+  document.addEventListener('click', (e)=>{
+    if(!form.contains(e.target)){
+      suggestions.style.display='none';
+    }
+  });
+
+  // Prevent empty searches and show warning
+  form.addEventListener('submit', (e)=>{
+    const q = input.value.trim();
+    if(!q){
+      e.preventDefault();
+      warning.textContent = 'Empty keyword.';
+      warning.style.display='block';
+      input.focus();
+    }
+  });
+});
+</script>
+{% endblock %}
+
+

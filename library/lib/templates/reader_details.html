@@ -1,0 +1,77 @@
+{% extends 'admin_base.html' %}
+
+{% block content %}
+<style>
+  .details-container { margin:24px; }
+  h2 { color:#2c3e50; margin-bottom:20px; }
+  h3 { color:#555; margin-top:24px; margin-bottom:16px; }
+  .info-card { background:white; padding:16px; border-radius:4px; margin-bottom:20px; box-shadow:0 2px 4px rgba(0,0,0,0.1); }
+  .info-item { margin:8px 0; line-height:1.8; }
+  table { width:100%; border-collapse:collapse; background:white; box-shadow:0 2px 4px rgba(0,0,0,0.1); margin-bottom:24px; }
+  th { background:#2196F3; color:white; padding:12px; text-align:left; }
+  td { padding:12px; border-bottom:1px solid #ddd; }
+  tr:hover { background:#f5f5f5; }
+  .actions { margin-top:24px; }
+  a { color:#2196F3; text-decoration:none; margin-right:16px; }
+  a:hover { text-decoration:underline; }
+  .delete-link { color:#d32f2f; }
+</style>
+
+<div class="details-container">
+    <h2>👤 Reader Details</h2>
+    
+    <div class="info-card">
+        <div class="info-item"><strong>ID:</strong> {{ reader.reader_id }}</div>
+        <div class="info-item"><strong>Name:</strong> {{ reader.name }}</div>
+        <div class="info-item"><strong>Role:</strong>
+            {% if reader.is_staff_member %}
+                Staff / Teacher
+            {% else %}
+                Student
+            {% endif %}
+        </div>
+        <div class="info-item"><strong>Date of Birth:</strong> {{ reader.date_of_birth }}</div>
+        <div class="info-item"><strong>Phone:</strong> {{ reader.phone_number }}</div>
+        <div class="info-item"><strong>Address:</strong> {{ reader.address }}</div>
+    </div>
+
+    <h3>📚 Issued Books</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Book</th>
+                <th>Issued Date</th>
+                <th>Due Date</th>
+                <th>Returned Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for issue in issues %}
+            <tr>
+                <td>{{ issue.book.name }}</td>
+                <td>{{ issue.issued_date }}</td>
+                <td>{{ issue.due_date }}</td>
+                <td>
+                    {% if issue.returned_date %}
+                        {{ issue.returned_date }}
+                    {% else %}
+                        <span style="color:#ff9800;">Not Returned</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" style="text-align:center;color:#999;">No books issued.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="actions">
+        <a href="{% url 'edit_reader' reader.pk %}">✏️ Edit</a>
+        <a href="{% url 'delete_reader' reader.pk %}" class="delete-link">🗑️ Delete</a>
+        <a href="{% url 'view_readers' %}">← Back to Readers List</a>
+    </div>
+</div>
+
+{% endblock %}

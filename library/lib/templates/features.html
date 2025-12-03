@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10">
+  <header class="mb-6">
+    <h1 class="text-2xl sm:text-3xl font-semibold tracking-tight text-slate-900">SmartLibrary Features</h1>
+    <p class="mt-2 text-sm text-slate-600 max-w-2xl">
+      A focused overview of how SmartLibrary helps librarians and readers work faster, stay organized, and keep every
+      copy accounted for.
+    </p>
+  </header>
+
+  <section class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+    <article class="rounded-2xl bg-white/90 border border-slate-100/80 shadow-sm p-4 sm:p-5">
+      <h2 class="text-sm font-semibold text-slate-900 mb-1.5 flex items-center gap-2">
+        <span class="text-lg">🔍</span> Smart Book Search
+      </h2>
+      <p class="text-xs text-slate-600 leading-relaxed">
+        Search across title, author, ISBN, and category with relevance‑based ordering and highlighted matches, so the
+        right book appears at the top.
+      </p>
+    </article>
+
+    <article class="rounded-2xl bg-white/90 border border-slate-100/80 shadow-sm p-4 sm:p-5">
+      <h2 class="text-sm font-semibold text-slate-900 mb-1.5 flex items-center gap-2">
+        <span class="text-lg">📘</span> Borrow &amp; Return Tracking
+      </h2>
+      <p class="text-xs text-slate-600 leading-relaxed">
+        Maintain a clear history of every issue and return, with stock automatically adjusted and overdue items easy to
+        spot.
+      </p>
+    </article>
+
+    <article class="rounded-2xl bg-white/90 border border-slate-100/80 shadow-sm p-4 sm:p-5">
+      <h2 class="text-sm font-semibold text-slate-900 mb-1.5 flex items-center gap-2">
+        <span class="text-lg">💰</span> Automated Fines
+      </h2>
+      <p class="text-xs text-slate-600 leading-relaxed">
+        Automatically calculate overdue fines based on your rules, reducing manual calculations and ensuring fairness.
+      </p>
+    </article>
+
+    <article class="rounded-2xl bg-white/90 border border-slate-100/80 shadow-sm p-4 sm:p-5">
+      <h2 class="text-sm font-semibold text-slate-900 mb-1.5 flex items-center gap-2">
+        <span class="text-lg">👥</span> Role‑Based Access
+      </h2>
+      <p class="text-xs text-slate-600 leading-relaxed">
+        Dedicated dashboards for Admins and Readers with clear separation of privileges, keeping management powerful and
+        reader views simple.
+      </p>
+    </article>
+
+    <article class="rounded-2xl bg-white/90 border border-slate-100/80 shadow-sm p-4 sm:p-5">
+      <h2 class="text-sm font-semibold text-slate-900 mb-1.5 flex items-center gap-2">
+        <span class="text-lg">🔔</span> Notifications &amp; Reminders
+      </h2>
+      <p class="text-xs text-slate-600 leading-relaxed">
+        Automatic notifications for due‑soon and overdue books help readers stay on top of returns and avoid
+        unnecessary fines.
+      </p>
+    </article>
+
+    <article class="rounded-2xl bg-white/90 border border-slate-100/80 shadow-sm p-4 sm:p-5">
+      <h2 class="text-sm font-semibold text-slate-900 mb-1.5 flex items-center gap-2">
+        <span class="text-lg">📊</span> Usage Analytics
+      </h2>
+      <p class="text-xs text-slate-600 leading-relaxed">
+        Visualize how often books are issued over time to understand demand, improve purchasing decisions, and surface
+        popular titles.
+      </p>
+    </article>
+  </section>
+</div>
+{% endblock %}
+
+

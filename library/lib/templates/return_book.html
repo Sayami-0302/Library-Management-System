@@ -1,0 +1,44 @@
+{% extends 'admin_base.html' %}
+
+{% block content %}
+<style>
+  .return-container { max-width:600px; margin:24px auto; padding:20px; background:#f9f9f9; border-radius:8px; }
+  h2 { color:#2c3e50; margin-bottom:24px; }
+  .book-info { background:white; padding:16px; border-radius:4px; margin-bottom:20px; }
+  .info-item { margin:8px 0; line-height:1.6; }
+  .button-group { display:flex; gap:12px; margin-top:20px; }
+  button, a { padding:10px 20px; border-radius:4px; border:none; cursor:pointer; text-decoration:none; font-size:14px; }
+  button[type="submit"] { background:#4CAF50; color:white; }
+  a { background:#2196F3; color:white; }
+  .returned-msg { background:#d4edda; color:#155724; padding:12px; border-radius:4px; border-left:4px solid #28a745; }
+</style>
+
+<div class="return-container">
+    <h2>📚 Return Book</h2>
+
+    <div class="book-info">
+        <div class="info-item"><strong>Reader:</strong> {{ issue.reader.name }}</div>
+        <div class="info-item"><strong>Book:</strong> {{ issue.book.name }}</div>
+        <div class="info-item"><strong>Issued Date:</strong> {{ issue.issued_date }}</div>
+        <div class="info-item"><strong>Due Date:</strong> {{ issue.due_date }}</div>
+    </div>
+
+    {% if issue.returned_date %}
+        <div class="returned-msg">
+            <strong>✓ Already Returned on {{ issue.returned_date }}</strong>
+        </div>
+        <div style="margin-top:20px;">
+            <a href="{% url 'view_issues' %}" style="background:#2196F3;color:white;">Back to Issued Books</a>
+        </div>
+    {% else %}
+        <form method="post">
+            {% csrf_token %}
+            <div class="button-group">
+                <button type="submit">Mark as Returned</button>
+                <a href="{% url 'view_issues' %}">Cancel</a>
+            </div>
+        </form>
+    {% endif %}
+</div>
+
+{% endblock %}

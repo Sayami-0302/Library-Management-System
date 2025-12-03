@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Reader Dashboard - My Library</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/theme.css' %}">
+    <style>
+        /* Reader-specific styling */
+        header {
+            padding-bottom: 0;
+        }
+        .reader-nav {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            padding: 12px 20px 15px 20px;
+            border-top: 1px solid var(--border-color);
+            margin-top: 10px;
+            align-items: center;
+        }
+
+        .reader-nav a,
+        .reader-nav button.settings-toggle {
+            color: var(--text-dark);
+            padding: 8px 12px;
+            background: var(--primary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 13px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .reader-nav a:hover,
+        .reader-nav button.settings-toggle:hover {
+            background: var(--primary-blue);
+            color: white;
+            border-color: var(--primary-blue);
+        }
+
+        .reader-nav a:active,
+        .reader-nav button.settings-toggle:active {
+            transform: scale(0.98);
+        }
+        .reader-nav a.active {
+            background: var(--primary-blue);
+            color: white;
+            border-color: var(--primary-blue);
+            cursor: not-allowed;
+            opacity: 0.8;
+            pointer-events: none;
+        }
+
+        .notification-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #ff6b6b;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-left: 4px;
+        }
+
+        .reader-settings {
+            margin-left: auto;
+            position: relative;
+        }
+
+        .reader-settings-menu {
+            position: absolute;
+            right: 0;
+            top: 36px;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            min-width: 180px;
+            display: none;
+            z-index: 50;
+        }
+
+        .reader-settings-menu a {
+            display: block;
+            padding: 8px 12px;
+            text-decoration: none;
+            color: var(--text-dark);
+            background: white;
+        }
+
+        .reader-settings-menu a:hover {
+            background: var(--primary-bg);
+            color: var(--text-dark);
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>📚 Reader Dashboard</h1>
+    <div class="reader-nav">
+        <a href="{% url 'reader_dashboard' %}" data-page="reader_dashboard">Dashboard</a>
+        <a href="{% url 'reader_view_books' %}" data-page="reader_view_books">Browse Books</a>
+        <a href="{% url 'reader_issued_books' %}" data-page="reader_issued_books">My Books</a>
+        <a href="{% url 'reader_notifications' %}" data-page="reader_notifications">
+            🔔 Notifications
+            {% if unread_notif_count > 0 %}
+                <span class="notification-badge">{{ unread_notif_count }}</span>
+            {% endif %}
+        </a>
+        <button type="button" id="reader-theme-toggle" aria-label="Toggle theme"
+                style="margin-left:auto; background:var(--primary-bg); border:1px solid var(--border-color); border-radius:999px; padding:6px 10px; cursor:pointer; font-size:12px;">
+            🌙
+        </button>
+        <div class="reader-settings">
+            <button type="button" class="settings-toggle">Settings ▾</button>
+            <div class="reader-settings-menu" id="reader-settings-menu">
+                <a href="{% url 'reader_change_password' %}">Change Password</a>
+                <a href="{% url 'reader_delete_account' %}">Delete Account</a>
+                <a href="{% url 'logout_reader' %}">Logout</a>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPath = window.location.pathname.replace(/\/$/, '');
+            const navLinks = document.querySelectorAll('.reader-nav a[data-page]');
+            navLinks.forEach(link => {
+                try {
+                    const href = link.getAttribute('href') || '';
+                    const normalized = href.replace(/\/$/, '');
+                    if (normalized && currentPath.includes(normalized)) {
+                        link.classList.add('active');
+                    }
+                } catch (e) {
+                    // ignore malformed hrefs
+                }
+            });
+
+            const settingsToggle = document.querySelector('.reader-nav .settings-toggle');
+            const menu = document.getElementById('reader-settings-menu');
+            if (settingsToggle && menu) {
+                settingsToggle.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+                });
+                document.addEventListener('click', function () {
+                    menu.style.display = 'none';
+                });
+            }
+
+            // Theme toggle (shared via localStorage "sl-theme")
+            (function () {
+                const root = document.documentElement;
+                const btn = document.getElementById('reader-theme-toggle');
+                if (!btn) return;
+
+                function applyTheme(theme) {
+                    root.setAttribute('data-theme', theme);
+                    btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+                    try { localStorage.setItem('sl-theme', theme); } catch (e) {}
+                }
+
+                let saved = null;
+                try { saved = localStorage.getItem('sl-theme'); } catch (e) {}
+                if (saved === 'dark' || saved === 'light') {
+                    applyTheme(saved);
+                } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    applyTheme('dark');
+                } else {
+                    applyTheme('light');
+                }
+
+                btn.addEventListener('click', function () {
+                    const current = root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+                    applyTheme(current === 'dark' ? 'light' : 'dark');
+                });
+            })();
+        });
+    </script>
+</header>
+
+<main>
+    {% block content %}
+    {% endblock %}
+</main>
+
+<footer>
+    &copy; {% now "Y" %} My Library. All rights reserved.
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,54 @@
+{% extends 'admin_base.html' %}
+
+{% block content %}
+<style>
+  .view-container { margin:24px; }
+  h2 { color:#2c3e50; margin-bottom:20px; }
+  .back-link { display:inline-block; margin-bottom:16px; padding:8px 12px; background:#4CAF50; color:white; text-decoration:none; border-radius:4px; }
+  .back-link:hover { background:#45a049; }
+  table { width:100%; border-collapse:collapse; background:white; box-shadow:0 2px 4px rgba(0,0,0,0.1); }
+  th { background:#d32f2f; color:white; padding:12px; text-align:left; }
+  td { padding:12px; border-bottom:1px solid #ddd; }
+  tr:hover { background:#ffebee; }
+  a { color:#2196F3; text-decoration:none; margin:0 5px; }
+  a:hover { text-decoration:underline; }
+  .days-overdue { color:#d32f2f; font-weight:bold; }
+</style>
+
+<div class="view-container">
+    <h2>⏰ Overdue Books</h2>
+    <a href="{% url 'view_issues' %}" class="back-link">← Back to Issued Books</a>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Reader</th>
+                <th>Book</th>
+                <th>Issued Date</th>
+                <th>Due Date</th>
+                <th>Days Overdue</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for issue in overdue_issues %}
+            <tr>
+                <td>{{ issue.reader.name }}</td>
+                <td>{{ issue.book.name }}</td>
+                <td>{{ issue.issued_date }}</td>
+                <td>{{ issue.due_date }}</td>
+                <td class="days-overdue">{{ issue.days_overdue }}</td>
+                <td>
+                    <a href="{% url 'return_book' issue.pk %}">📚 Return</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" style="text-align:center;color:#999;">No overdue books.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

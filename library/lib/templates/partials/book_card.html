@@ -1,0 +1,15 @@
+<div class="book-card" role="article" aria-label="{{ book.name }}" style="background:#F4F7FA;border:1px solid #C7D6E5;border-radius:12px;padding:12px;display:flex;flex-direction:column;">
+  <div class="book-image" style="height:140px;background:#DCEAF5;border-radius:8px;overflow:hidden;border:1px solid #C7D6E5;display:flex;align-items:center;justify-content:center;margin-bottom:10px;">
+    {% if book.image %}
+      <img src="{{ book.image.url }}" alt="{{ book.name }}" style="width:100%;height:100%;object-fit:cover;">
+    {% else %}
+      <span style="color:#2D3A45;opacity:0.6">No image</span>
+    {% endif %}
+  </div>
+  <h4 class="book-title" style="margin:0 0 6px 0;font-size:15px;color:#2D3A45;font-weight:600;">{{ book.name }}</h4>
+  <div class="book-author" style="font-size:13px;color:#2D3A45;opacity:0.8;margin-bottom:8px">{{ book.author }}</div>
+  <div style="margin-top:auto;display:flex;gap:8px;">
+    <div class="book-rating" style="font-weight:700;color:#6EA4D1">⭐ {{ book.combined_rating|default:"0" }}/5</div>
+    <a href="{% url 'book_details' book.pk %}" class="view-details-btn" style="margin-left:auto;padding:8px 10px;background:#6EA4D1;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;font-size:13px;">Details</a>
+  </div>
+</div>

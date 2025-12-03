@@ -1,0 +1,117 @@
+{% load static %}
+<header class="shadow-sm bg-white/80 backdrop-blur sticky top-0 z-30 border-b border-slate-200/70">
+  <nav class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+    <!-- Logo -->
+    <a href="{% url 'home' %}" class="flex items-center gap-2 group">
+      <div class="h-9 w-9 rounded-2xl bg-gradient-to-tr from-sky-500 to-indigo-500 flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
+        <span class="text-white text-xl font-semibold">📚</span>
+      </div>
+      <div class="flex flex-col leading-tight">
+        <span class="font-semibold text-slate-900 text-base tracking-tight">SmartLibrary</span>
+        <span class="text-[11px] text-slate-500 uppercase tracking-[0.12em]">Library LMS</span>
+      </div>
+    </a>
+
+    <!-- Desktop nav -->
+    <div class="hidden md:flex items-center gap-8 text-sm font-medium">
+      <a href="{% url 'home' %}#hero" class="text-slate-600 hover:text-slate-900 transition-colors">Home</a>
+      <a href="{% url 'features' %}" class="text-slate-600 hover:text-slate-900 transition-colors">Features</a>
+      <a href="{% url 'contact' %}" class="text-slate-600 hover:text-slate-900 transition-colors">Contact</a>
+
+      <div class="flex items-center gap-3">
+        <a href="{% url 'public_books' %}"
+           class="hidden lg:inline-flex items-center rounded-full border border-sky-200/70 bg-sky-50 text-sky-700 px-3 py-1.5 text-xs font-semibold shadow-sm hover:bg-sky-100 hover:border-sky-300 transition">
+          Browse Library
+        </a>
+
+        <!-- Theme toggle -->
+        <button type="button"
+                id="theme-toggle"
+                class="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white/80 px-2 py-1 text-xs text-slate-500 hover:border-sky-300 hover:text-sky-800 transition"
+                aria-label="Toggle dark mode">
+          <span id="theme-toggle-icon">🌙</span>
+        </button>
+
+        <div class="inline-flex rounded-full shadow-sm">
+          <a href="{% url 'login_reader' %}"
+             class="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-sky-500 to-indigo-500 px-4 py-1.5 text-sm font-semibold text-white shadow-md hover:shadow-lg hover:from-sky-600 hover:to-indigo-600 transition-transform transform hover:-translate-y-0.5">
+            <span>Login</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile menu button -->
+    <button type="button"
+            class="md:hidden inline-flex items-center justify-center rounded-full p-2 text-slate-600 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-400"
+            aria-label="Open navigation"
+            onclick="document.body.classList.toggle('sl-mobile-open')">
+      <svg class="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 7h16M4 12h16M4 17h10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </nav>
+
+  <!-- Mobile nav panel -->
+  <div class="md:hidden sl-mobile-panel bg-white border-t border-slate-200/80 shadow-sm"
+       x-cloak>
+    <div class="mx-auto max-w-6xl px-4 py-3 space-y-2 text-sm font-medium">
+      <a href="{% url 'home' %}#hero" class="block px-2 py-2 rounded-lg text-slate-700 hover:bg-slate-100">Home</a>
+      <a href="{% url 'features' %}" class="block px-2 py-2 rounded-lg text-slate-700 hover:bg-slate-100">Features</a>
+      <a href="{% url 'contact' %}" class="block px-2 py-2 rounded-lg text-slate-700 hover:bg-slate-100">Contact</a>
+      <div class="pt-1 border-t border-slate-100 mt-2">
+        <a href="{% url 'public_books' %}" class="block px-2 py-2 rounded-lg text-sky-700 bg-sky-50 hover:bg-sky-100">
+          Browse Library
+        </a>
+        <a href="{% url 'login_reader' %}"
+           class="mt-2 inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-sky-500 to-indigo-500 px-4 py-2 text-sm font-semibold text-white shadow-md hover:shadow-lg">
+          Login
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<script>
+  // Close mobile nav when clicking outside
+  document.addEventListener('click', function (e) {
+    if (!document.body.classList.contains('sl-mobile-open')) return;
+    const panel = document.querySelector('.sl-mobile-panel');
+    const header = document.querySelector('header');
+    if (panel && header && !header.contains(e.target)) {
+      document.body.classList.remove('sl-mobile-open');
+    }
+  });
+
+  // Light/Dark theme toggle using data-theme on <html>
+  (function () {
+    const root = document.documentElement;
+    const toggle = document.getElementById('theme-toggle');
+    const icon = document.getElementById('theme-toggle-icon');
+    if (!toggle || !icon) return;
+
+    const applyTheme = (theme) => {
+      root.setAttribute('data-theme', theme);
+      icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+      try { localStorage.setItem('sl-theme', theme); } catch (e) {}
+    };
+
+    // Init from storage or prefers-color-scheme
+    let saved = null;
+    try { saved = localStorage.getItem('sl-theme'); } catch (e) {}
+    if (saved === 'dark' || saved === 'light') {
+      applyTheme(saved);
+    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      applyTheme('dark');
+    } else {
+      applyTheme('light');
+    }
+
+    toggle.addEventListener('click', function () {
+      const current = root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+      applyTheme(current === 'dark' ? 'light' : 'dark');
+    });
+  })();
+</script>
+
+

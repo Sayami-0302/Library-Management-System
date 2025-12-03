@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Panel - My Library</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/theme.css' %}">
+    <style>
+        /* Admin-specific styling */
+        header {
+            padding-bottom: 0;
+        }
+        .admin-nav {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            padding: 12px 20px 15px 20px;
+            border-top: 1px solid var(--border-color);
+            margin-top: 10px;
+            align-items: center;
+        }
+
+        .admin-nav a,
+        .admin-nav button.settings-toggle {
+            color: var(--text-dark);
+            padding: 8px 12px;
+            background: var(--primary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 13px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .admin-nav a:hover,
+        .admin-nav button.settings-toggle:hover {
+            background: var(--primary-blue);
+            color: white;
+            border-color: var(--primary-blue);
+        }
+
+        .admin-nav a:active {
+            transform: scale(0.98);
+        }
+        .admin-nav a.active {
+            background: var(--primary-blue);
+            color: white;
+            border-color: var(--primary-blue);
+            cursor: not-allowed;
+            opacity: 0.8;
+            pointer-events: none;
+        }
+
+        .admin-settings {
+            margin-left: auto;
+            position: relative;
+        }
+
+        .admin-settings-menu {
+            position: absolute;
+            right: 0;
+            top: 36px;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            min-width: 180px;
+            display: none;
+            z-index: 50;
+        }
+
+        .admin-settings-menu a {
+            display: block;
+            padding: 8px 12px;
+            text-decoration: none;
+            color: var(--text-dark);
+            background: white;
+            border-radius: 0;
+            border: none;
+        }
+
+        .admin-settings-menu a:hover {
+            background: var(--primary-bg);
+            color: var(--text-dark);
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>📊 Admin Panel</h1>
+    <div class="admin-nav">
+        <a href="{% url 'admin_dashboard' %}" data-page="admin_dashboard">Dashboard</a>
+        <a href="{% url 'view_books' %}" data-page="view_books">Books</a>
+        <a href="{% url 'view_readers' %}" data-page="view_readers">Readers</a>
+        <a href="{% url 'view_issues' %}" data-page="view_issues">Issued Books</a>
+        <a href="{% url 'view_fines' %}" data-page="view_fines">Fines</a>
+        <a href="{% url 'admin_issue_requests' %}" data-page="admin_issue_requests">Requests</a>
+        <a href="{% url 'view_categories' %}" data-page="view_categories">Categories</a>
+
+        <button type="button" id="admin-theme-toggle" aria-label="Toggle theme"
+                style="margin-left:auto; background:var(--primary-bg); border:1px solid var(--border-color); border-radius:999px; padding:6px 10px; cursor:pointer; font-size:12px;">
+            🌙
+        </button>
+
+        <div class="admin-settings">
+            <button type="button" class="settings-toggle">Settings ▾</button>
+            <div class="admin-settings-menu" id="admin-settings-menu">
+                <a href="{% url 'admin_change_password' %}">Change Password</a>
+                <a href="{% url 'admin_delete_account' %}">Delete Account</a>
+                <a href="{% url 'logout_admin' %}">Logout</a>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPath = window.location.pathname.replace(/\/$/, '');
+            const navLinks = document.querySelectorAll('.admin-nav a[data-page]');
+            navLinks.forEach(link => {
+                try {
+                    const href = link.getAttribute('href') || '';
+                    const normalized = href.replace(/\/$/, '');
+                    if (normalized && currentPath.includes(normalized)) {
+                        link.classList.add('active');
+                    }
+                } catch (e) {
+                    // ignore malformed hrefs
+                }
+            });
+
+            const settingsToggle = document.querySelector('.settings-toggle');
+            const menu = document.getElementById('admin-settings-menu');
+            if (settingsToggle && menu) {
+                settingsToggle.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+                });
+                document.addEventListener('click', function () {
+                    menu.style.display = 'none';
+                });
+            }
+
+            // Theme toggle (shared with public/reader via localStorage "sl-theme")
+            (function () {
+                const root = document.documentElement;
+                const btn = document.getElementById('admin-theme-toggle');
+                if (!btn) return;
+
+                function applyTheme(theme) {
+                    root.setAttribute('data-theme', theme);
+                    btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+                    try { localStorage.setItem('sl-theme', theme); } catch (e) {}
+                }
+
+                let saved = null;
+                try { saved = localStorage.getItem('sl-theme'); } catch (e) {}
+                if (saved === 'dark' || saved === 'light') {
+                    applyTheme(saved);
+                } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    applyTheme('dark');
+                } else {
+                    applyTheme('light');
+                }
+
+                btn.addEventListener('click', function () {
+                    const current = root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+                    applyTheme(current === 'dark' ? 'light' : 'dark');
+                });
+            })();
+        });
+    </script>
+</header>
+
+<main>
+    {% block content %}
+    {% endblock %}
+</main>
+
+<footer>
+    &copy; {% now "Y" %} My Library Admin Panel. All rights reserved.
+</footer>
+
+</body>
+</html>

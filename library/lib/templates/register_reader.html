@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="mx-auto max-w-2xl px-4 py-10">
+  <div class="rounded-2xl bg-white/90 border border-slate-200/80 shadow-sm px-6 py-7">
+    <h2 class="text-xl font-semibold text-slate-900 mb-1">Register as a Reader</h2>
+    <p class="text-xs text-slate-500 mb-4">Create your SmartLibrary reader account to request and track books.</p>
+
+    <form method="post" class="grid gap-4">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="rounded-lg border border-rose-100 bg-rose-50 px-3 py-2 text-xs text-rose-600">
+          {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+        </div>
+      {% endif %}
+
+      {% for field in form %}
+        <div class="space-y-1">
+          <label class="block text-xs font-medium text-slate-700">{{ field.label }}</label>
+          <div class="text-sm text-slate-700">{{ field }}</div>
+          {% if field.help_text %}
+            <p class="text-[11px] text-slate-400">{{ field.help_text }}</p>
+          {% endif %}
+          {% if field.errors %}
+            <p class="text-[11px] text-rose-600">{{ field.errors|striptags }}</p>
+          {% endif %}
+        </div>
+      {% endfor %}
+
+      <button type="submit"
+              class="w-full inline-flex items-center justify-center rounded-full bg-gradient-to-r from-sky-500 to-indigo-500 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:shadow-lg hover:from-sky-600 hover:to-indigo-600 transition-transform transform hover:-translate-y-0.5">
+        Register
+      </button>
+
+      <div class="text-center text-[11px] text-slate-500">
+        Already registered?
+        <a href="{% url 'login_reader' %}" class="font-medium text-sky-600 hover:text-sky-800">Login here</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

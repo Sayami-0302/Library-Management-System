@@ -1,0 +1,110 @@
+{% extends 'admin_base.html' %}
+
+{% block content %}
+<style>
+  .dashboard-container { 
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+  }
+  .stat-card { 
+    padding: 24px;
+    border-radius: 8px;
+    background: white;
+    border-left: 4px solid var(--primary-blue);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    text-align: center;
+    transition: all 0.3s ease;
+  }
+  .stat-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    transform: translateY(-2px);
+  }
+  .stat-card h3 { 
+    margin: 0 0 16px 0;
+    color: var(--text-dark);
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .stat-value { 
+    font-size: 36px;
+    font-weight: bold;
+    color: var(--primary-blue);
+  }
+  .stat-card-books { border-left-color: #4CAF50; }
+  .stat-card-readers { border-left-color: #ff9800; }
+
+  .low-stock-card {
+    grid-column: 1 / -1;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    padding: 16px 20px;
+  }
+  .low-stock-card h3 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-dark);
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .low-stock-list {
+    list-style:none;
+    padding:0;
+    margin:0;
+    font-size:13px;
+  }
+  .low-stock-list li {
+    display:flex;
+    justify-content:space-between;
+    padding:6px 0;
+    border-bottom:1px solid rgba(0,0,0,0.04);
+  }
+  .low-stock-list li:last-child {
+    border-bottom:none;
+  }
+  .low-stock-name {
+    max-width:70%;
+  }
+  .low-stock-count {
+    color:#d32f2f;
+    font-weight:600;
+  }
+</style>
+
+<div class="dashboard-container">
+    <div class="stat-card stat-card-books">
+        <h3>📚 Total Books</h3>
+        <div class="stat-value">{{ total_books }}</div>
+    </div>
+
+    <div class="stat-card stat-card-readers">
+        <h3>👥 Total Readers</h3>
+        <div class="stat-value">{{ total_readers }}</div>
+    </div>
+
+    <div class="low-stock-card">
+        <h3>⚠ Low-stock Titles (≤ 1 copy)</h3>
+        {% if low_stock_books %}
+        <ul class="low-stock-list">
+            {% for book in low_stock_books %}
+            <li>
+                <span class="low-stock-name">{{ book.name }}{% if book.category %} <span style="color:#90a4ae;">({{ book.category.name }})</span>{% endif %}</span>
+                <span class="low-stock-count">{{ book.number_in_stock }} left</span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p style="font-size:13px;color:#78909c;margin:0;">All titles have more than one copy in stock.</p>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

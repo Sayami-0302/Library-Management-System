@@ -1,0 +1,99 @@
+{% extends 'reader_base.html' %}
+
+{% block content %}
+<style>
+  .dashboard-container { padding: 20px; max-width: 1200px; margin: 0 auto; }
+  .welcome-section { margin-bottom: 30px; }
+  .welcome-section h2 { color: var(--text-dark); margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+  .staff-badge { display: inline-block; background: var(--primary-blue); color: white; font-size: 0.75rem; padding: 4px 10px; border-radius: 12px; font-weight: 600; }
+  .section-title { color: var(--text-dark); margin-top: 30px; margin-bottom: 15px; font-size: 18px; font-weight: 600; }
+  .info-card { background: var(--card-bg); padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid var(--primary-blue); }
+  .info-item { margin: 8px 0; line-height: 1.8; }
+  .table-wrapper { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 20px; }
+  table thead th { background: var(--primary-blue); color: white; padding: 12px; text-align: left; font-weight: 600; }
+  table tbody td { padding: 12px; border-bottom: 1px solid var(--border-color); }
+  table tbody tr:last-child td { border-bottom: none; }
+  table tbody tr:hover { background: var(--primary-bg); }
+  .not-returned { color: #ff9800; font-weight: 600; }
+</style>
+
+<div class="dashboard-container">
+    <div class="welcome-section">
+        <h2>👋 Welcome, {{ reader.name }}
+            <span class="staff-badge">
+                {% if reader.is_staff_member %}
+                    Teacher
+                {% else %}
+                    Student
+                {% endif %}
+            </span>
+        </h2>
+    
+    <div class="info-card">
+        <div class="info-item"><strong>Reader ID:</strong> {{ reader.reader_id }}</div>
+        <div class="info-item"><strong>Date of Birth:</strong> {{ reader.date_of_birth }}</div>
+        <div class="info-item"><strong>Phone:</strong> {{ reader.phone_number }}</div>
+        <div class="info-item"><strong>Address:</strong> {{ reader.address }}</div>
+    </div>
+
+    <h3 class="section-title">📚 Your Issued Books</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Book</th>
+                    <th>Issued Date</th>
+                    <th>Due Date</th>
+                    <th>Returned Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for issue in issues %}
+                <tr>
+                    <td>{{ issue.book.name }}</td>
+                    <td>{{ issue.issued_date }}</td>
+                    <td>{{ issue.due_date }}</td>
+                    <td>
+                        {% if issue.returned_date %}
+                            {{ issue.returned_date }}
+                        {% else %}
+                            <span class="not-returned">Not Returned</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="text-align:center;color:#999;padding:20px;">You have no issued books.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <h3 class="section-title">💰 Your Pending Fines</h3>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Book</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for fine in fines %}
+                <tr>
+                    <td>{{ fine.issue.book.name }}</td>
+                    <td>₹{{ fine.amount }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="2" style="text-align:center;color:#999;padding:20px;">No pending fines.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends 'admin_base.html' %}
+
+{% block content %}
+<style>
+  .view-container { margin:24px; }
+  h2 { color:#2c3e50; margin-bottom:20px; }
+  table { width:100%; border-collapse:collapse; background:white; box-shadow:0 2px 4px rgba(0,0,0,0.1); }
+  th { background:#2196F3; color:white; padding:12px; text-align:left; }
+  td { padding:12px; border-bottom:1px solid #ddd; }
+  tr:hover { background:#f5f5f5; }
+  a { color:#2196F3; text-decoration:none; margin-right:8px; }
+  a:hover { text-decoration:underline; }
+</style>
+
+<div class="view-container">
+    <h2>👥 All Readers</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Date of Birth</th>
+                <th>Phone</th>
+                <th>Address</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for reader in readers %}
+            <tr>
+                <td>{{ reader.reader_id }}</td>
+                <td><a href="{% url 'reader_details' reader.pk %}">{{ reader.name }}</a></td>
+                <td>{{ reader.date_of_birth }}</td>
+                <td>{{ reader.phone_number }}</td>
+                <td>{{ reader.address }}</td>
+                <td>
+                    <a href="{% url 'edit_reader' reader.pk %}">✏️ Edit</a> |
+                    <a href="{% url 'delete_reader' reader.pk %}" style="color:#d32f2f;">🗑️ Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" style="text-align:center;color:#999;">No readers found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% include 'partials/pagination.html' with page_obj=page_obj pagination_query=pagination_query %}
+</div>
+
+{% endblock %}

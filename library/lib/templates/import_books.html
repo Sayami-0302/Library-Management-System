@@ -1,0 +1,24 @@
+{% extends 'admin_base.html' %}
+
+{% block content %}
+<div style="margin:24px;max-width:500px;">
+  <h2 style="color:#2c3e50;margin-bottom:12px;">⬆ Import Books from CSV</h2>
+  <p style="font-size:13px;color:#555;margin-bottom:16px;">
+    Upload a CSV file with columns like <strong>name</strong>, <strong>isbn</strong>, <strong>author</strong>,
+    <strong>category</strong>, <strong>number_in_stock</strong>, <strong>status</strong>. Existing ISBNs are skipped.
+  </p>
+
+  <form method="post" enctype="multipart/form-data" style="background:white;padding:16px;border-radius:8px;border:1px solid #ddd;">
+    {% csrf_token %}
+    <div style="margin-bottom:12px;">
+      <input type="file" name="file" accept=".csv" required>
+    </div>
+    <button type="submit" style="padding:8px 14px;border-radius:4px;border:none;background:#4CAF50;color:white;font-weight:600;cursor:pointer;">
+      Import
+    </button>
+    <a href="{% url 'view_books' %}" style="margin-left:8px;font-size:13px;">Cancel</a>
+  </form>
+</div>
+{% endblock %}
+
+

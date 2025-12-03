@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load highlight %}
+
+{% block content %}
+<style>
+  .view-container { margin:24px; }
+  h2 { color:#2c3e50; margin-bottom:20px; }
+  table { width:100%; border-collapse:collapse; background:white; box-shadow:0 2px 4px rgba(0,0,0,0.1); }
+  th { background:#2196F3; color:white; padding:12px; text-align:left; }
+  td { padding:12px; border-bottom:1px solid #ddd; max-width:300px; }
+  tr:hover { background:#f5f5f5; }
+  a { color:#2196F3; text-decoration:none; }
+  a:hover { text-decoration:underline; }
+  .no-desc { color:#999; }
+</style>
+
+<div class="view-container">
+    {% include 'partials/book_search.html' %}
+    
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <h2>📚 All Available Books</h2>
+    </div>
+
+    {% if query and books|length == 0 %}
+    <div style="margin-bottom:12px;color:#d32f2f;font-weight:600;">
+        No books found for "<span>{{ query }}</span>".
+    </div>
+    {% endif %}
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Book Name</th>
+                <th>Author</th>
+                <th>Rating</th>
+                <th>Category</th>
+                <th>ISBN</th>
+                <th>Copies Available</th>
+                <!-- Description removed (preview on hover) -->
+            </tr>
+        </thead>
+        <tbody>
+            {% for book in books %}
+            <tr {% if book.category %}data-category-id="{{ book.category.id }}"{% endif %}
+                data-name="{{ book.name|escape }}"
+                data-author="{{ book.author|default:''|escape }}"
+                data-desc="{{ book.description|default:''|truncatechars:180|escape }}"
+                data-image="{% if book.image %}{{ book.image.url }}{% else %}{% static 'images/placeholder_book.png' %}{% endif %}"
+            >
+                <td><a href="{% url 'book_details' book.pk %}">{% if query %}{{ book.name|highlight:query }}{% else %}{{ book.name }}{% endif %}</a></td>
+                <td>{% if query %}{{ book.author|highlight:query }}{% else %}{{ book.author }}{% endif %}</td>
+                <td>⭐ {{ book.combined_rating }}/5</td>
+                <td>{% if query %}{% if book.category %}{{ book.category.name|highlight:query }}{% endif %}{% else %}{% if book.category %}{{ book.category.name }}{% endif %}{% endif %}</td>
+                <td>{{ book.isbn }}</td>
+                <td>{{ book.number_in_stock }}</td>
+                <!-- description column intentionally left out; preview shows details on hover -->
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" style="text-align:center;color:#999;">No books available.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% include 'partials/pagination.html' with page_obj=page_obj pagination_query=pagination_query %}
+</div>
+
+<!-- Category filtering handled in the search partial (partials/book_search.html) -->
+
+{% endblock %}

@@ -1,0 +1,136 @@
+{% extends 'admin_base.html' %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  .admin-book { display:flex; gap:24px; }
+  .admin-book img { max-width:200px; border-radius:6px; box-shadow:0 2px 6px rgba(0,0,0,0.08); }
+  .admin-meta { flex:2; }
+  .admin-analytics { flex:1.5; }
+  .admin-meta .row { margin-bottom:10px; }
+  .admin-actions a { margin-right:12px; }
+  .analytics-card { background:#f9f9f9; border:1px solid #ddd; border-radius:8px; padding:16px; }
+  .analytics-card h3 { margin-top:0; color:#2c3e50; }
+  .analytics-stat { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #eee; }
+  .analytics-stat:last-child { border-bottom:none; }
+  .analytics-stat strong { color:#2980b9; }
+  #adminIssuanceChart { max-height:300px; margin-top:12px; }
+</style>
+
+<div class="admin-book">
+  <div>
+    {% if book.image %}
+      <img src="{{ book.image.url }}" alt="{{ book.name }}">
+    {% else %}
+      <div style="width:200px;height:280px;display:flex;align-items:center;justify-content:center;background:#f7f7f7;color:#999;">No image</div>
+    {% endif %}
+  </div>
+
+  <div class="admin-meta">
+    <h2>{{ book.name }}</h2>
+    <div class="row"><strong>ISBN:</strong> {{ book.isbn }}</div>
+    <div class="row"><strong>Author:</strong> {{ book.author }}</div>
+    <div class="row"><strong>Category:</strong> {{ book.category.name }}</div>
+    <div class="row"><strong>Stock:</strong> {{ book.number_in_stock }}</div>
+  <div class="row"><strong>Rating:</strong> ⭐ {{ book.combined_rating }}/5</div>
+
+    {% if book.description %}
+      <div class="row"><strong>Description</strong></div>
+      <div class="row">{{ book.description|linebreaksbr }}</div>
+    {% else %}
+      <div class="row"><em>No description available.</em></div>
+    {% endif %}
+
+    <div class="admin-actions" style="margin-top:12px;">
+      <a href="{% url 'edit_book' book.pk %}">Edit</a>
+      <a href="{% url 'delete_book' book.pk %}">Delete</a>
+      <a href="{% url 'view_books' %}">Back to list</a>
+    </div>
+  </div>
+
+  <div class="admin-analytics">
+    <div class="analytics-card">
+      <h3>📊 Analytics (90 Days)</h3>
+      <div class="analytics-stat">
+        <span>Total Issued:</span>
+        <strong>{{ analytics.total_issued }}</strong>
+      </div>
+      <div class="analytics-stat">
+        <span>Avg per Day:</span>
+        <strong>{{ analytics.avg_per_day|floatformat:2 }}</strong>
+      </div>
+      <canvas id="adminIssuanceChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('adminIssuanceChart').getContext('2d');
+    const dates = {{ analytics.dates|safe }};
+    const quantities = {{ analytics.quantities|safe }};
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dates,
+            datasets: [{
+                label: 'Books Issued',
+                data: quantities,
+                borderColor: '#2980b9',
+                backgroundColor: 'rgba(41, 128, 185, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.3,
+                pointRadius: 3,
+                pointBackgroundColor: '#2980b9'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Quantity' }
+                },
+                x: {
+                    title: { display: true, text: 'Date' }
+                }
+            }
+        }
+    });
+});
+</script>
+
+<section style="margin-top:32px;">
+    <h2>⭐ Most Popular</h2>
+    {% if popular_books %}
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;">
+            {% for pop_book in popular_books %}
+                <div style="border:1px solid #ddd;border-radius:8px;padding:12px;background:#f9f9f9;transition:box-shadow 0.2s;">
+                    <div style="height:180px;background:#f0f0f0;border-radius:4px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+                        {% if pop_book.image %}
+                            <img src="{{ pop_book.image.url }}" alt="{{ pop_book.name }}" style="width:100%;height:100%;object-fit:cover;">
+                        {% else %}
+                            <span style="color:#999;">No image</span>
+                        {% endif %}
+                    </div>
+                    <h4 style="margin:8px 0;font-size:14px;">{{ pop_book.name }}</h4>
+                    <p style="margin:4px 0;font-size:12px;color:#555;"><strong>Author:</strong> {{ pop_book.author }}</p>
+                    <p style="margin:4px 0;font-size:12px;color:#555;"><strong>Rating:</strong> ⭐ {{ pop_book.combined_rating }}/5</p>
+                    <p style="margin:4px 0;font-size:12px;color:#555;"><strong>Stock:</strong> {{ pop_book.number_in_stock }}</p>
+                    <a href="{% url 'admin_book_details' pop_book.pk %}" style="display:inline-block;margin-top:8px;padding:6px 12px;background:#2980b9;color:white;border-radius:4px;text-decoration:none;font-size:12px;">View Details</a>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p style="color:#999;">No popular books available yet.</p>
+    {% endif %}
+</section>
+
+{% endblock %}
+

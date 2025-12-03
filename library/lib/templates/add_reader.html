@@ -1,0 +1,21 @@
+{% extends 'admin_base.html' %}
+
+{% block content %}
+<style>
+  .form-container { max-width:600px; margin:24px auto; padding:20px; background:#f9f9f9; border-radius:8px; }
+  h2 { color:#2c3e50; margin-bottom:20px; }
+  form { background:white; padding:16px; border-radius:4px; }
+</style>
+
+<div class="form-container">
+    <h2>👤 Add New Reader</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" style="background:#2980b9;color:white;padding:8px 16px;border:none;border-radius:4px;cursor:pointer;">Save Reader</button>
+        <a href="{% url 'view_readers' %}" style="margin-left:8px;padding:8px 16px;background:#95a5a6;color:white;border-radius:4px;text-decoration:none;display:inline-block;">Cancel</a>
+    </form>
+</div>
+
+{% endblock %}
+

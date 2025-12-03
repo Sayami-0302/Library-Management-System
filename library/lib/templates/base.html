@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  {% load static %}
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SmartLibrary</title>
+
+  <!-- Tailwind CDN for modern, responsive layout -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Global pastel theme + components -->
+  <link rel="stylesheet" href="{% static 'css/theme.css' %}">
+
+  {% block extra_css %}{% endblock %}
+</head>
+<body class="min-h-screen bg-gradient-to-b from-sky-50 via-slate-50 to-slate-100 text-slate-900 antialiased">
+
+  {% include 'partials/navbar.html' %}
+
+  <main class="page-content pt-4 pb-10">
+    {% block content %}
+    {% endblock %}
+  </main>
+
+  {% include 'partials/footer.html' %}
+
+  {% block extra_js %}{% endblock %}
+
+</body>
+</html>

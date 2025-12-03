@@ -1,0 +1,100 @@
+{% extends 'reader_base.html' %}
+{% load static %}
+{% load highlight %}
+
+{% block content %}
+<style>
+  .view-container { margin:24px; }
+  h2 { color:#2c3e50; margin-bottom:20px; }
+  .alert { padding:12px; border-radius:4px; margin-bottom:16px; }
+  .alert-info { background:#d1ecf1; color:#0c5460; border-left:4px solid #17a2b8; }
+  table { width:100%; border-collapse:collapse; background:white; box-shadow:0 2px 4px rgba(0,0,0,0.1); }
+  th { background:#4CAF50; color:white; padding:12px; text-align:left; }
+  td { padding:12px; border-bottom:1px solid #ddd; max-width:200px; }
+  tr:hover { background:#f5f5f5; }
+  a { color:#2196F3; text-decoration:none; }
+  a:hover { text-decoration:underline; }
+  form { margin:0; }
+  button { padding:8px 12px; background:#4CAF50; color:white; border:none; border-radius:4px; cursor:pointer; font-size:13px; }
+  button:hover { background:#45a049; }
+  .out-of-stock { color:#d32f2f; font-weight:bold; }
+</style>
+
+<div class="view-container">
+    {% include 'partials/book_search.html' %}
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-info">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <h2>📚 All Books</h2>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Author</th>
+                <th>Rating</th>
+                <th>Category</th>
+                <th>ISBN</th>
+                <th>Stock</th>
+                <th>Description</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for book in books %}
+            <tr {% if book.category %}data-category-id="{{ book.category.id }}"{% endif %}
+                data-name="{{ book.name|escape }}"
+                data-author="{{ book.author|default:''|escape }}"
+                data-desc="{{ book.description|default:''|truncatechars:180|escape }}"
+                data-image="{% if book.image %}{{ book.image.url }}{% else %}{% static 'images/placeholder_book.png' %}{% endif %}">
+
+                <td>
+                    <a href="{% url 'reader_book_detail' book.pk %}">
+                        {% if query %}{{ book.name|highlight:query }}{% else %}{{ book.name }}{% endif %}
+                    </a>
+                </td>
+                <td>
+                    {% if query %}{{ book.author|highlight:query }}{% else %}{{ book.author }}{% endif %}
+                </td>
+                <td>⭐ {{ book.combined_rating }}/5</td>
+                <td>
+                    {% if book.category %}
+                        {% if query %}{{ book.category.name|highlight:query }}{% else %}{{ book.category.name }}{% endif %}
+                    {% else %}
+                        <span style="color:#999;">—</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if query %}{{ book.isbn|highlight:query }}{% else %}{{ book.isbn }}{% endif %}
+                </td>
+                <td>{{ book.number_in_stock }}</td>
+                <td>
+                    {% if book.description %}
+                        {{ book.description|truncatewords:15 }}
+                    {% else %}
+                        <span style="color:#999;">No description</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if book.number_in_stock > 0 %}
+                        <form method="post" action="{% url 'issue_request' book.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit">📕 Request</button>
+                        </form>
+                    {% else %}
+                        <span class="out-of-stock">Out of Stock</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% include 'partials/pagination.html' with page_obj=page_obj pagination_query=pagination_query %}
+</div>
+
+{% endblock %}
