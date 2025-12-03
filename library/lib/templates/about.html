@@ -1,0 +1,192 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-12">
+  <!-- Page Header -->
+  <div class="mb-12 text-center">
+    <h1 class="text-4xl font-bold text-slate-900 mb-4">About SmartLibrary</h1>
+    <p class="text-lg text-slate-600">Empowering communities through intelligent library management</p>
+  </div>
+
+  <!-- Main Content -->
+  <div class="space-y-8">
+    <!-- Mission Section -->
+    <section class="bg-white/80 backdrop-blur rounded-lg p-8 border border-slate-200/80">
+      <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+        <span class="text-blue-600">📚</span> Our Mission
+      </h2>
+      <p class="text-slate-700 leading-relaxed">
+        SmartLibrary is dedicated to revolutionizing how libraries manage their collections and serve their communities. 
+        We believe that efficient library management shouldn't be complicated. Our platform combines intuitive design 
+        with powerful features to make book management, reader engagement, and library operations seamless and enjoyable.
+      </p>
+    </section>
+
+    <!-- Vision Section -->
+    <section class="bg-white/80 backdrop-blur rounded-lg p-8 border border-slate-200/80">
+      <h2 class="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+        <span class="text-purple-600">✨</span> Our Vision
+      </h2>
+      <p class="text-slate-700 leading-relaxed">
+        We envision a world where libraries have the tools they need to thrive in the digital age. By providing 
+        comprehensive, user-friendly management solutions, we empower librarians to focus on what matters most—
+        connecting people with knowledge and building vibrant reading communities.
+      </p>
+    </section>
+
+    <!-- Key Features Section -->
+    <section class="bg-white/80 backdrop-blur rounded-lg p-8 border border-slate-200/80">
+      <h2 class="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+        <span class="text-green-600">⚡</span> Why Choose SmartLibrary?
+      </h2>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="flex gap-4">
+          <div class="flex-shrink-0">
+            <div class="flex items-center justify-center h-10 w-10 rounded-lg bg-blue-100">
+              <span class="text-blue-600 font-bold">1</span>
+            </div>
+          </div>
+          <div>
+            <h3 class="font-semibold text-slate-900">Easy Book Management</h3>
+            <p class="text-slate-600 mt-1">Manage your entire book collection with powerful search, categorization, and tracking features.</p>
+          </div>
+        </div>
+
+        <div class="flex gap-4">
+          <div class="flex-shrink-0">
+            <div class="flex items-center justify-center h-10 w-10 rounded-lg bg-purple-100">
+              <span class="text-purple-600 font-bold">2</span>
+            </div>
+          </div>
+          <div>
+            <h3 class="font-semibold text-slate-900">Reader Engagement</h3>
+            <p class="text-slate-600 mt-1">Enable readers to browse, request books, and discover their next favorite read.</p>
+          </div>
+        </div>
+
+        <div class="flex gap-4">
+          <div class="flex-shrink-0">
+            <div class="flex items-center justify-center h-10 w-10 rounded-lg bg-green-100">
+              <span class="text-green-600 font-bold">3</span>
+            </div>
+          </div>
+          <div>
+            <h3 class="font-semibold text-slate-900">Smart Notifications</h3>
+            <p class="text-slate-600 mt-1">Keep readers informed about due dates, overdue books, and new releases automatically.</p>
+          </div>
+        </div>
+
+        <div class="flex gap-4">
+          <div class="flex-shrink-0">
+            <div class="flex items-center justify-center h-10 w-10 rounded-lg bg-orange-100">
+              <span class="text-orange-600 font-bold">4</span>
+            </div>
+          </div>
+          <div>
+            <h3 class="font-semibold text-slate-900">Analytics & Insights</h3>
+            <p class="text-slate-600 mt-1">Gain valuable insights into book circulation, popular titles, and reader preferences.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="bg-white/80 backdrop-blur rounded-lg p-8 border border-slate-200/80">
+      <h2 class="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+        <span class="text-indigo-600">🎯</span> How It Works
+      </h2>
+      <div class="space-y-4">
+        <div class="flex gap-4">
+          <div class="flex-shrink-0 flex items-center">
+            <div class="flex items-center justify-center h-8 w-8 rounded-full bg-indigo-600 text-white text-sm font-semibold">
+              1
+            </div>
+          </div>
+          <div>
+            <h3 class="font-semibold text-slate-900">Admin Setup</h3>
+            <p class="text-slate-600">Library administrators configure their book collections and manage system settings.</p>
+          </div>
+        </div>
+
+        <div class="flex gap-4">
+          <div class="flex-shrink-0 flex items-center">
+            <div class="flex items-center justify-center h-8 w-8 rounded-full bg-indigo-600 text-white text-sm font-semibold">
+              2
+            </div>
+          </div>
+          <div>
+            <h3 class="font-semibold text-slate-900">Reader Registration</h3>
+            <p class="text-slate-600">Readers create accounts to access the library's digital catalog and services.</p>
+          </div>
+        </div>
+
+        <div class="flex gap-4">
+          <div class="flex-shrink-0 flex items-center">
+            <div class="flex items-center justify-center h-8 w-8 rounded-full bg-indigo-600 text-white text-sm font-semibold">
+              3
+            </div>
+          </div>
+          <div>
+            <h3 class="font-semibold text-slate-900">Book Discovery</h3>
+            <p class="text-slate-600">Readers browse, search, and discover books by category, author, or title.</p>
+          </div>
+        </div>
+
+        <div class="flex gap-4">
+          <div class="flex-shrink-0 flex items-center">
+            <div class="flex items-center justify-center h-8 w-8 rounded-full bg-indigo-600 text-white text-sm font-semibold">
+              4
+            </div>
+          </div>
+          <div>
+            <h3 class="font-semibold text-slate-900">Request & Issue</h3>
+            <p class="text-slate-600">Readers request books, admins approve requests and track issuances.</p>
+          </div>
+        </div>
+
+        <div class="flex gap-4">
+          <div class="flex-shrink-0 flex items-center">
+            <div class="flex items-center justify-center h-8 w-8 rounded-full bg-indigo-600 text-white text-sm font-semibold">
+              5
+            </div>
+          </div>
+          <div>
+            <h3 class="font-semibold text-slate-900">Manage & Improve</h3>
+            <p class="text-slate-600">Use analytics and feedback to optimize your library's collection and services.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-8 border border-slate-200/80">
+      <h2 class="text-2xl font-bold text-slate-900 mb-4">Get in Touch</h2>
+      <p class="text-slate-700 mb-6">
+        Interested in learning more about SmartLibrary? Have questions or feedback? We'd love to hear from you!
+      </p>
+      <a href="{% url 'contact' %}" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+        Contact Us
+      </a>
+    </section>
+  </div>
+
+  <!-- Footer Stats -->
+  <div class="mt-16 grid md:grid-cols-3 gap-8 text-center">
+    <div class="bg-white/80 backdrop-blur rounded-lg p-6 border border-slate-200/80">
+      <div class="text-3xl font-bold text-blue-600 mb-2">∞</div>
+      <p class="text-slate-700 font-medium">Books Managed</p>
+      <p class="text-sm text-slate-500">Unlimited collection support</p>
+    </div>
+    <div class="bg-white/80 backdrop-blur rounded-lg p-6 border border-slate-200/80">
+      <div class="text-3xl font-bold text-purple-600 mb-2">24/7</div>
+      <p class="text-slate-700 font-medium">Always Available</p>
+      <p class="text-sm text-slate-500">Access your library anytime</p>
+    </div>
+    <div class="bg-white/80 backdrop-blur rounded-lg p-6 border border-slate-200/80">
+      <div class="text-3xl font-bold text-green-600 mb-2">✓</div>
+      <p class="text-slate-700 font-medium">Trusted Platform</p>
+      <p class="text-sm text-slate-500">By libraries everywhere</p>
+    </div>
+  </div>
+</div>
+{% endblock %}
