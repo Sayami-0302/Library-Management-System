@@ -125,7 +125,8 @@ ehthumbs.db
 Thumbs.db
 
 # Django specific
-media/
+media/*
+!media/book_images/
 staticfiles/
 migrations/
 .secret_key
