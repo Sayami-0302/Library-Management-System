@@ -450,10 +450,11 @@ def register_reader(request):
         form = ReaderRegisterForm(request.POST)
         if form.is_valid():
             reader = form.save(commit=False)
+            # Store password as plain text for simplicity (consider hashing in future)
             password = form.cleaned_data.get('password')
             if password:
-                # Hash the password for secure storage
-                reader.password = make_password(password)
+                reader.password = password
+            # ensure is_staff_member is set (form provides it)
             reader.is_staff_member = form.cleaned_data.get('is_staff_member', False)
             reader.save()
             return redirect('login_reader')
@@ -468,14 +469,11 @@ def login_reader(request):
         reader_id = request.POST.get('reader_id')
         password = request.POST.get('password')
         try:
-            reader = Reader.objects.get(reader_id=reader_id)
-            if check_password(password, reader.password):
-                request.session['reader_id'] = reader.id  # store session
-                # Cache staff flag in session for quick checks in templates/views
-                request.session['is_staff_member'] = bool(getattr(reader, 'is_staff_member', False))
-                return redirect('reader_dashboard')  # you can create a dashboard view
-            else:
-                error = "Invalid Reader ID or password"
+            reader = Reader.objects.get(reader_id=reader_id, password=password)
+            request.session['reader_id'] = reader.id  # store session
+            # Cache staff flag in session for quick checks in templates/views
+            request.session['is_staff_member'] = bool(getattr(reader, 'is_staff_member', False))
+            return redirect('reader_dashboard')  # you can create a dashboard view
         except Reader.DoesNotExist:
             error = "Invalid Reader ID or password"
     return render(request, 'login_reader.html', {'error': error})
@@ -496,13 +494,12 @@ def reader_change_password(request):
         current = request.POST.get('current_password', '')
         new1 = request.POST.get('new_password', '')
         new2 = request.POST.get('confirm_password', '')
-        if not check_password(current, reader.password):
+        if current != (reader.password or ''):
             messages.error(request, "Current password is incorrect.")
         elif not new1 or new1 != new2:
             messages.error(request, "New passwords do not match.")
         else:
-            # Hash the new password before saving
-            reader.password = make_password(new1)
+            reader.password = new1
             reader.save()
             messages.success(request, "Password updated successfully.")
             return redirect('reader_dashboard')
