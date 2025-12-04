@@ -46,11 +46,7 @@
         </thead>
         <tbody>
             {% for book in books %}
-            <tr {% if book.category %}data-category-id="{{ book.category.id }}"{% endif %}
-                data-name="{{ book.name|escape }}"
-                data-author="{{ book.author|default:''|escape }}"
-                data-desc="{{ book.description|default:''|truncatechars:180|escape }}"
-                data-image="{% if book.image %}{{ book.image.url }}{% else %}{% static 'images/placeholder_book.png' %}{% endif %}">
+            <tr {% if book.category %}data-category-id="{{ book.category.id }}"{% endif %}>
 
                 <td>
                     <a href="{% url 'reader_book_detail' book.pk %}">
@@ -96,5 +92,60 @@
 
     {% include 'partials/pagination.html' with page_obj=page_obj pagination_query=pagination_query %}
 </div>
+
+<script>
+// Completely disable hover preview for reader books page
+window.disableHoverPreview = true;
+
+// Hide the preview box immediately if it exists
+if (window.hideHoverPreview) {
+    window.hideHoverPreview();
+}
+
+// Stop all hover preview listeners
+document.removeEventListener('mouseover', function(e) {
+    const row = e.target.closest('table tbody tr');
+    if (!row) return;
+    const name = row.getAttribute('data-name') || '';
+    const author = row.getAttribute('data-author') || '';
+    const desc = row.getAttribute('data-desc') || '';
+    const image = row.getAttribute('data-image') || '';
+    const rect = e.target.getBoundingClientRect();
+    if (window.showHoverPreview) {
+        window.showHoverPreview({name, author, desc, image}, {x: rect.right, y: rect.top}, '');
+    }
+}, {passive: true});
+
+document.removeEventListener('mouseout', function(e) {
+    const row = e.target.closest('table tbody tr');
+    if (!row) return;
+    const to = e.relatedTarget;
+    if (!to || !row.contains(to)) {
+        if (window.hideHoverPreview) window.hideHoverPreview();
+    }
+}, {passive: true});
+
+document.removeEventListener('mousemove', function(e) {
+    if (window.previewEl && window.previewEl.style.display !== 'none') {
+        window.moveHoverPreview({x: e.clientX, y: e.clientY});
+    }
+}, {passive: true});
+
+// Prevent any new preview shows
+const originalShow = window.showHoverPreview;
+window.showHoverPreview = function() {
+    if (window.hideHoverPreview) {
+        window.hideHoverPreview();
+    }
+};
+
+// Hide the preview element if it exists
+setTimeout(function() {
+    const previewEl = document.getElementById('book-hover-preview');
+    if (previewEl) {
+        previewEl.style.display = 'none';
+    }
+}, 100);
+</script>
 
 {% endblock %}
