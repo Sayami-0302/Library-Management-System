@@ -57,6 +57,7 @@ class Admin(models.Model):
     password = models.CharField(max_length=128, default='temp123')  # hashed password recommended
     is_superuser = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
+    profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -72,6 +73,7 @@ class Reader(models.Model):
     is_active = models.BooleanField(default=True)
     # Flag for college staff members who have different borrowing rules (e.g. longer due dates)
     is_staff_member = models.BooleanField(default=False)
+    profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
 
 
     def __str__(self):

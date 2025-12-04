@@ -1,30 +1,111 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-10">
-  <header class="mb-6">
-    <h1 class="text-2xl sm:text-3xl font-semibold tracking-tight text-slate-900">Contact &amp; Support</h1>
-    <p class="mt-2 text-sm text-slate-600">
-      This page is a placeholder for your institution’s contact details and support process. Customize it with your own
-      email, phone, or ticketing links.
+<div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-12">
+  <!-- Page Header -->
+  <div class="mb-12 text-center">
+    <h1 class="text-4xl font-bold text-slate-900 mb-4">Contact Us</h1>
+    <p class="text-lg text-slate-600">Meet our technical team ready to support SmartLibrary</p>
+  </div>
+
+  <!-- General Contact Section -->
+  <section class="mb-16 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-8 border border-slate-200/80">
+    <h2 class="text-2xl font-bold text-slate-900 mb-4">Get in Touch</h2>
+    <p class="text-slate-700 mb-6">
+      Have questions about SmartLibrary or need technical support? Our team of talented developers and engineers is here to help. 
+      Reach out to any of our technical staff members with your inquiries.
     </p>
-  </header>
-
-  <section class="grid gap-6 sm:grid-cols-2">
-    <div class="rounded-2xl bg-white/90 border border-slate-100/80 shadow-sm p-5">
-      <h2 class="text-sm font-semibold text-slate-900 mb-2">General Enquiries</h2>
-      <p class="text-xs text-slate-600 leading-relaxed">
-        Add your library’s email address or web form link here so students and staff can reach out for help with their
-        accounts, book requests, or technical issues.
-      </p>
+    <div class="grid md:grid-cols-2 gap-6">
+      <div class="bg-white rounded-lg p-4 border border-slate-200">
+        <h3 class="font-semibold text-slate-900 mb-2">📧 General Support</h3>
+        <p class="text-slate-600 text-sm">For general questions and support requests, contact our team directly.</p>
+      </div>
+      <div class="bg-white rounded-lg p-4 border border-slate-200">
+        <h3 class="font-semibold text-slate-900 mb-2">🐛 Report Issues</h3>
+        <p class="text-slate-600 text-sm">Found a bug? Reach out to any team member to report issues or suggest features.</p>
+      </div>
     </div>
+  </section>
 
-    <div class="rounded-2xl bg-white/90 border border-slate-100/80 shadow-sm p-5">
-      <h2 class="text-sm font-semibold text-slate-900 mb-2">Technical Support</h2>
-      <p class="text-xs text-slate-600 leading-relaxed">
-        Use this section to describe how to report bugs or request new features for SmartLibrary, for example by
-        contacting your IT department or development team.
-      </p>
+  <!-- Technical Staff Section -->
+  <section>
+    <h2 class="text-2xl font-bold text-slate-900 mb-8 text-center">Our Technical Team</h2>
+    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+      
+      <!-- Staff Member 1: Aayush Manandhar -->
+      <div class="bg-white/80 backdrop-blur rounded-lg border border-slate-200/80 overflow-hidden hover:shadow-lg transition-shadow">
+        <img src="https://ui-avatars.com/api/?name=Aayush+Manandhar&background=3b82f6&color=fff&size=200" alt="Aayush Manandhar" class="w-full h-40 object-cover">
+        <div class="p-6">
+          <h3 class="text-lg font-bold text-slate-900">Aayush Manandhar</h3>
+        </div>
+      </div>
+
+      <!-- Staff Member 2: Subash Sinkhwal -->
+      <div class="bg-white/80 backdrop-blur rounded-lg border border-slate-200/80 overflow-hidden hover:shadow-lg transition-shadow">
+        <img src="https://ui-avatars.com/api/?name=Subash+Sinkhwal&background=a855f7&color=fff&size=200" alt="Subash Sinkhwal" class="w-full h-40 object-cover">
+        <div class="p-6">
+          <h3 class="text-lg font-bold text-slate-900">Subash Sinkhwal</h3>
+        </div>
+      </div>
+
+      <!-- Staff Member 3: Sarun Kusatha -->
+      <div class="bg-white/80 backdrop-blur rounded-lg border border-slate-200/80 overflow-hidden hover:shadow-lg transition-shadow">
+        <img src="https://ui-avatars.com/api/?name=Sarun+Kusatha&background=22c55e&color=fff&size=200" alt="Sarun Kusatha" class="w-full h-40 object-cover">
+        <div class="p-6">
+          <h3 class="text-lg font-bold text-slate-900">Sarun Kusatha</h3>
+        </div>
+      </div>
+
+      <!-- Staff Member 4: Pranaya Shrestha -->
+      <div class="bg-white/80 backdrop-blur rounded-lg border border-slate-200/80 overflow-hidden hover:shadow-lg transition-shadow">
+        <img src="https://ui-avatars.com/api/?name=Pranaya+Shrestha&background=f97316&color=fff&size=200" alt="Pranaya Shrestha" class="w-full h-40 object-cover">
+        <div class="p-6">
+          <h3 class="text-lg font-bold text-slate-900">Pranaya Shrestha</h3>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Support Info Section -->
+  <section class="mt-16 bg-white/80 backdrop-blur rounded-lg p-8 border border-slate-200/80">
+    <h2 class="text-2xl font-bold text-slate-900 mb-6">How Can We Help?</h2>
+    <div class="grid md:grid-cols-3 gap-6">
+      <div class="flex gap-4">
+        <div class="flex-shrink-0">
+          <div class="flex items-center justify-center h-10 w-10 rounded-lg bg-blue-100">
+            <span class="text-blue-600 text-lg">❓</span>
+          </div>
+        </div>
+        <div>
+          <h3 class="font-semibold text-slate-900">Questions?</h3>
+          <p class="text-sm text-slate-600 mt-1">Have questions about how to use SmartLibrary? Our team is here to guide you through every feature.</p>
+        </div>
+      </div>
+
+      <div class="flex gap-4">
+        <div class="flex-shrink-0">
+          <div class="flex items-center justify-center h-10 w-10 rounded-lg bg-purple-100">
+            <span class="text-purple-600 text-lg">🐛</span>
+          </div>
+        </div>
+        <div>
+          <h3 class="font-semibold text-slate-900">Found a Bug?</h3>
+          <p class="text-sm text-slate-600 mt-1">Encounter a technical issue? Report it to our team and we'll work on a fix right away.</p>
+        </div>
+      </div>
+
+      <div class="flex gap-4">
+        <div class="flex-shrink-0">
+          <div class="flex items-center justify-center h-10 w-10 rounded-lg bg-green-100">
+            <span class="text-green-600 text-lg">💡</span>
+          </div>
+        </div>
+        <div>
+          <h3 class="font-semibold text-slate-900">Have Ideas?</h3>
+          <p class="text-sm text-slate-600 mt-1">Want to suggest a new feature or improvement? We love hearing from our users!</p>
+        </div>
+      </div>
     </div>
   </section>
 </div>

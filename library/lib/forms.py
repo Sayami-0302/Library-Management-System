@@ -96,6 +96,43 @@ class AdminRegisterForm(forms.ModelForm):
             field.widget.attrs['class'] = f"{existing} sl-input w-full rounded-lg border border-slate-200 px-3 py-2 text-sm".strip()
             if not field.widget.attrs.get('placeholder'):
                 field.widget.attrs['placeholder'] = field.label
+class ReaderEditProfileForm(forms.ModelForm):
+    class Meta:
+        model = Reader
+        fields = ['name', 'date_of_birth', 'phone_number', 'address', 'profile_picture']
+        widgets = {
+            'date_of_birth': forms.DateInput(attrs={
+                'type': 'date',
+                'format': '%Y-%m-%d',
+                'placeholder': 'YYYY-MM-DD',
+            }),
+            'address': forms.Textarea(attrs={
+                'rows': 4,
+                'cols': 40,
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name, field in self.fields.items():
+            existing_class = field.widget.attrs.get('class', '')
+            field.widget.attrs['class'] = f"{existing_class} sl-input w-full rounded-lg border border-slate-200 px-3 py-2 text-sm".strip()
+            if not field.widget.attrs.get('placeholder') and field.widget.__class__.__name__ not in ('RadioSelect', 'Textarea'):
+                field.widget.attrs['placeholder'] = field.label
+
+class AdminEditProfileForm(forms.ModelForm):
+    class Meta:
+        model = Admin
+        fields = ['name', 'profile_picture']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name, field in self.fields.items():
+            existing_class = field.widget.attrs.get('class', '')
+            field.widget.attrs['class'] = f"{existing_class} sl-input w-full rounded-lg border border-slate-200 px-3 py-2 text-sm".strip()
+            if not field.widget.attrs.get('placeholder'):
+                field.widget.attrs['placeholder'] = field.label
+
 class UploadExcelForm(forms.Form):
     excel_file = forms.FileField(
         label="Upload Excel (.xlsx)",
