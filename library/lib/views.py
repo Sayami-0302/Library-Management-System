@@ -18,9 +18,19 @@ from .models import Book, Category
 import json
 import csv
 import io
+import random
 from functools import wraps
 from django.conf import settings
 from django.core.paginator import Paginator
+
+try:
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.styles import getSampleStyleSheet
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+    from reportlab.lib import colors
+    REPORTLAB_AVAILABLE = True
+except ImportError:
+    REPORTLAB_AVAILABLE = False
 
 # maximum number of books a reader can have at once (including pending requests)
 MAX_ISSUED_PER_READER = getattr(settings, 'MAX_ISSUED_PER_READER', 5)
@@ -768,35 +778,19 @@ def reader_issued_books(request):
 ### admin
 def register_admin(request):
     from .forms import AdminRegisterForm
-    superuser_exists = Admin.objects.filter(is_superuser=True).exists()
-    requester = None
-    if superuser_exists:
-        admin_id = request.session.get('admin_id')
-        if not admin_id:
-            messages.error(request, "Only the superuser can create new admin accounts.")
-            return redirect('login_admin')
-        requester = Admin.objects.filter(id=admin_id).first()
-        if not requester or not requester.is_superuser or not requester.is_active:
-            messages.error(request, "Only the superuser can create new admin accounts.")
-            return redirect('admin_dashboard')
-
+    
     if request.method == 'POST':
         form = AdminRegisterForm(request.POST)
         if form.is_valid():
-            active_admins = Admin.objects.filter(is_superuser=False, is_active=True).count()
-            if superuser_exists and active_admins >= 5:
-                form.add_error(None, "Cannot create more than five active admin accounts.")
+            active_admins = Admin.objects.filter(is_active=True).count()
+            if active_admins >= 3:
+                form.add_error(None, "Cannot create more than three active admin accounts.")
             else:
                 admin = form.save(commit=False)
                 admin.password = make_password(form.cleaned_data['password'])
-                # First admin becomes superuser by default
-                admin.is_superuser = not superuser_exists
                 admin.is_active = True
                 admin.save()
-                if not superuser_exists:
-                    messages.success(request, "Superuser account created. Please log in.")
-                else:
-                    messages.success(request, "Admin account created successfully.")
+                messages.success(request, "Admin account created successfully.")
                 return redirect('login_admin')
     else:
         form = AdminRegisterForm()
@@ -1590,11 +1584,15 @@ def export_issues(request):
             'Status': 'Returned' if issue.returned_date else 'Not Returned',
         })
     
+    if not data:
+        messages.warning(request, "No issues found to export.")
+        return redirect('view_issues')
+    
     if format_type == 'csv':
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="issues.csv"'
         
-        writer = csv.DictWriter(response, fieldnames=data[0].keys() if data else [])
+        writer = csv.DictWriter(response, fieldnames=data[0].keys())
         writer.writeheader()
         writer.writerows(data)
         return response
@@ -1610,55 +1608,50 @@ def export_issues(request):
         return response
     
     elif format_type == 'pdf':
-        try:
-            from reportlab.lib.pagesizes import letter, A4
-            from reportlab.lib.styles import getSampleStyleSheet
-            from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
-            from reportlab.lib import colors
-            
-            response = HttpResponse(content_type='application/pdf')
-            response['Content-Disposition'] = 'attachment; filename="issues.pdf"'
-            
-            doc = SimpleDocTemplate(response, pagesize=A4)
-            elements = []
-            
-            # Title
-            styles = getSampleStyleSheet()
-            title = Paragraph("Issues Report", styles['Title'])
-            elements.append(title)
-            
-            # Table data
-            table_data = [['Reader Name', 'Reader ID', 'Book Name', 'ISBN', 'Issued Date', 'Due Date', 'Returned Date', 'Status']]
-            for item in data:
-                table_data.append([
-                    item['Reader Name'],
-                    item['Reader ID'],
-                    item['Book Name'],
-                    item['ISBN'],
-                    str(item['Issued Date']),
-                    str(item['Due Date']),
-                    str(item['Returned Date']),
-                    item['Status'],
-                ])
-            
-            table = Table(table_data)
-            table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, 0), 10),
-                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black),
-            ]))
-            elements.append(table)
-            
-            doc.build(elements)
-            return response
-        except ImportError:
+        if not REPORTLAB_AVAILABLE:
             messages.error(request, "PDF export requires reportlab library.")
             return redirect('view_issues')
+        
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="issues.pdf"'
+        
+        doc = SimpleDocTemplate(response, pagesize=A4)
+        elements = []
+        
+        # Title
+        styles = getSampleStyleSheet()
+        title = Paragraph("Issues Report", styles['Title'])
+        elements.append(title)
+        
+        # Table data
+        table_data = [['Reader Name', 'Reader ID', 'Book Name', 'ISBN', 'Issued Date', 'Due Date', 'Returned Date', 'Status']]
+        for item in data:
+            table_data.append([
+                item['Reader Name'],
+                item['Reader ID'],
+                item['Book Name'],
+                item['ISBN'],
+                str(item['Issued Date']),
+                str(item['Due Date']),
+                str(item['Returned Date']),
+                item['Status'],
+            ])
+        
+        table = Table(table_data)
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ]))
+        elements.append(table)
+        
+        doc.build(elements)
+        return response
     
     messages.error(request, "Invalid format specified.")
     return redirect('view_issues')
@@ -1684,11 +1677,15 @@ def export_fines(request):
             'Status': 'Paid' if fine.paid else 'Unpaid',
         })
     
+    if not data:
+        messages.warning(request, "No fines found to export.")
+        return redirect('view_fines')
+    
     if format_type == 'csv':
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="fines.csv"'
         
-        writer = csv.DictWriter(response, fieldnames=data[0].keys() if data else [])
+        writer = csv.DictWriter(response, fieldnames=data[0].keys())
         writer.writeheader()
         writer.writerows(data)
         return response
@@ -1704,53 +1701,48 @@ def export_fines(request):
         return response
     
     elif format_type == 'pdf':
-        try:
-            from reportlab.lib.pagesizes import letter, A4
-            from reportlab.lib.styles import getSampleStyleSheet
-            from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
-            from reportlab.lib import colors
-            
-            response = HttpResponse(content_type='application/pdf')
-            response['Content-Disposition'] = 'attachment; filename="fines.pdf"'
-            
-            doc = SimpleDocTemplate(response, pagesize=A4)
-            elements = []
-            
-            # Title
-            styles = getSampleStyleSheet()
-            title = Paragraph("Fines Report", styles['Title'])
-            elements.append(title)
-            
-            # Table data
-            table_data = [['Reader Name', 'Reader ID', 'Book Name', 'Amount', 'Calculated Date', 'Status']]
-            for item in data:
-                table_data.append([
-                    item['Reader Name'],
-                    item['Reader ID'],
-                    item['Book Name'],
-                    f"₹{item['Amount']}",
-                    str(item['Calculated Date']),
-                    item['Status'],
-                ])
-            
-            table = Table(table_data)
-            table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, 0), 10),
-                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black),
-            ]))
-            elements.append(table)
-            
-            doc.build(elements)
-            return response
-        except ImportError:
+        if not REPORTLAB_AVAILABLE:
             messages.error(request, "PDF export requires reportlab library.")
             return redirect('view_fines')
+        
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="fines.pdf"'
+        
+        doc = SimpleDocTemplate(response, pagesize=A4)
+        elements = []
+        
+        # Title
+        styles = getSampleStyleSheet()
+        title = Paragraph("Fines Report", styles['Title'])
+        elements.append(title)
+        
+        # Table data
+        table_data = [['Reader Name', 'Reader ID', 'Book Name', 'Amount', 'Calculated Date', 'Status']]
+        for item in data:
+            table_data.append([
+                item['Reader Name'],
+                item['Reader ID'],
+                item['Book Name'],
+                f"₹{item['Amount']}",
+                str(item['Calculated Date']),
+                item['Status'],
+            ])
+        
+        table = Table(table_data)
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ]))
+        elements.append(table)
+        
+        doc.build(elements)
+        return response
     
     messages.error(request, "Invalid format specified.")
     return redirect('view_fines')
@@ -1777,11 +1769,15 @@ def export_readers(request):
             'Role': 'Staff/Teacher' if reader.is_staff_member else 'Student',
         })
     
+    if not data:
+        messages.warning(request, "No readers found to export.")
+        return redirect('view_readers')
+    
     if format_type == 'csv':
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="readers.csv"'
         
-        writer = csv.DictWriter(response, fieldnames=data[0].keys() if data else [])
+        writer = csv.DictWriter(response, fieldnames=data[0].keys())
         writer.writeheader()
         writer.writerows(data)
         return response
@@ -1797,54 +1793,49 @@ def export_readers(request):
         return response
     
     elif format_type == 'pdf':
-        try:
-            from reportlab.lib.pagesizes import letter, A4
-            from reportlab.lib.styles import getSampleStyleSheet
-            from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
-            from reportlab.lib import colors
-            
-            response = HttpResponse(content_type='application/pdf')
-            response['Content-Disposition'] = 'attachment; filename="readers.pdf"'
-            
-            doc = SimpleDocTemplate(response, pagesize=A4)
-            elements = []
-            
-            # Title
-            styles = getSampleStyleSheet()
-            title = Paragraph("Readers Report", styles['Title'])
-            elements.append(title)
-            
-            # Table data
-            table_data = [['Reader ID', 'Name', 'Date of Birth', 'Phone', 'Address', 'Status', 'Role']]
-            for item in data:
-                table_data.append([
-                    item['Reader ID'],
-                    item['Name'],
-                    str(item['Date of Birth']),
-                    item['Phone'],
-                    item['Address'][:20] + '...' if len(item['Address']) > 20 else item['Address'],
-                    item['Status'],
-                    item['Role'],
-                ])
-            
-            table = Table(table_data)
-            table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, 0), 10),
-                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black),
-            ]))
-            elements.append(table)
-            
-            doc.build(elements)
-            return response
-        except ImportError:
+        if not REPORTLAB_AVAILABLE:
             messages.error(request, "PDF export requires reportlab library.")
             return redirect('view_readers')
+        
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="readers.pdf"'
+        
+        doc = SimpleDocTemplate(response, pagesize=A4)
+        elements = []
+        
+        # Title
+        styles = getSampleStyleSheet()
+        title = Paragraph("Readers Report", styles['Title'])
+        elements.append(title)
+        
+        # Table data
+        table_data = [['Reader ID', 'Name', 'Date of Birth', 'Phone', 'Address', 'Status', 'Role']]
+        for item in data:
+            table_data.append([
+                item['Reader ID'],
+                item['Name'],
+                str(item['Date of Birth']),
+                item['Phone'],
+                item['Address'][:20] + '...' if len(item['Address']) > 20 else item['Address'],
+                item['Status'],
+                item['Role'],
+            ])
+        
+        table = Table(table_data)
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ]))
+        elements.append(table)
+        
+        doc.build(elements)
+        return response
     
     messages.error(request, "Invalid format specified.")
     return redirect('view_readers')
