@@ -2,6 +2,8 @@ from django.shortcuts import render
 from django import forms
 from .models import Book, Reader, Issue,Admin
 from django import forms
+from datetime import date, timedelta
+
 class BookForm(forms.ModelForm):
     class Meta:
         model = Book
@@ -33,7 +35,20 @@ class ReaderForm(forms.ModelForm):
                 'maxlength': '10',
                 'placeholder': '10 digit phone number',
             }),
+            'date_of_birth': forms.DateInput(attrs={
+                'type': 'date',
+                'max': (date.today() - timedelta(days=365*18)).strftime('%Y-%m-%d'),
+            }),
         }
+
+    def clean_date_of_birth(self):
+        dob = self.cleaned_data.get('date_of_birth')
+        if dob:
+            today = date.today()
+            age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+            if age < 18:
+                raise forms.ValidationError('Reader must be at least 18 years old.')
+        return dob
 
 class IssueForm(forms.ModelForm):
     class Meta:
@@ -65,6 +80,7 @@ class ReaderRegisterForm(forms.ModelForm):
                 'type': 'date',
                 'format': '%Y-%m-%d',
                 'placeholder': 'YYYY-MM-DD',
+                'max': (date.today() - timedelta(days=365*18)).strftime('%Y-%m-%d'),
             }),
             'address': forms.Textarea(attrs={
                 'rows': 3,
@@ -91,6 +107,7 @@ class ReaderRegisterForm(forms.ModelForm):
         password = cleaned_data.get('password')
         password_confirm = cleaned_data.get('password_confirm')
         phone_number = cleaned_data.get('phone_number')
+        dob = cleaned_data.get('date_of_birth')
         
         if password and password_confirm:
             if password != password_confirm:
@@ -99,6 +116,12 @@ class ReaderRegisterForm(forms.ModelForm):
         if phone_number:
             if not phone_number.isdigit() or len(phone_number) != 10:
                 raise forms.ValidationError({'phone_number': 'Phone number must be exactly 10 digits.'})
+        
+        if dob:
+            today = date.today()
+            age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+            if age < 18:
+                raise forms.ValidationError({'date_of_birth': 'Reader must be at least 18 years old.'})
         
         return cleaned_data
 
@@ -126,12 +149,22 @@ class ReaderEditProfileForm(forms.ModelForm):
                 'type': 'date',
                 'format': '%Y-%m-%d',
                 'placeholder': 'YYYY-MM-DD',
+                'max': (date.today() - timedelta(days=365*18)).strftime('%Y-%m-%d'),
             }),
             'address': forms.Textarea(attrs={
                 'rows': 4,
                 'cols': 40,
             }),
         }
+
+    def clean_date_of_birth(self):
+        dob = self.cleaned_data.get('date_of_birth')
+        if dob:
+            today = date.today()
+            age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+            if age < 18:
+                raise forms.ValidationError('Reader must be at least 18 years old.')
+        return dob
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
