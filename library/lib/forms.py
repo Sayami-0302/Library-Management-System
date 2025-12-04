@@ -26,6 +26,14 @@ class ReaderForm(forms.ModelForm):
     class Meta:
         model = Reader
         fields = ['reader_id', 'name', 'date_of_birth', 'phone_number', 'address', 'is_staff_member']
+        widgets = {
+            'phone_number': forms.TextInput(attrs={
+                'type': 'tel',
+                'pattern': '[0-9]{10}',
+                'maxlength': '10',
+                'placeholder': '10 digit phone number',
+            }),
+        }
 
 class IssueForm(forms.ModelForm):
     class Meta:
@@ -62,6 +70,12 @@ class ReaderRegisterForm(forms.ModelForm):
                 'rows': 3,
                 'cols': 40,
             }),
+            'phone_number': forms.TextInput(attrs={
+                'type': 'tel',
+                'pattern': '[0-9]{10}',
+                'maxlength': '10',
+                'placeholder': '10 digit phone number',
+            }),
         }
 
     def __init__(self, *args, **kwargs):
@@ -76,9 +90,16 @@ class ReaderRegisterForm(forms.ModelForm):
         cleaned_data = super().clean()
         password = cleaned_data.get('password')
         password_confirm = cleaned_data.get('password_confirm')
+        phone_number = cleaned_data.get('phone_number')
+        
         if password and password_confirm:
             if password != password_confirm:
                 raise forms.ValidationError('Passwords do not match.')
+        
+        if phone_number:
+            if not phone_number.isdigit() or len(phone_number) != 10:
+                raise forms.ValidationError({'phone_number': 'Phone number must be exactly 10 digits.'})
+        
         return cleaned_data
 
 

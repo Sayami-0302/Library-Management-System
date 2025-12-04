@@ -77,4 +77,9 @@ urlpatterns=[
     path('ajax/search-books/', views.ajax_search_books, name='ajax_search_books'),
     #analytics
     path('books/<int:pk>/analytics/', views.book_analytics_api, name='book_analytics_api'),
+    
+    # export functionality
+    path('issues/export/', views.export_issues, name='export_issues'),
+    path('fines/export/', views.export_fines, name='export_fines'),
+    path('readers/export/', views.export_readers, name='export_readers'),
 ]

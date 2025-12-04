@@ -16,12 +16,13 @@
   a { color:#2196F3; text-decoration:none; margin:0 5px; }
   a:hover { text-decoration:underline; }
   .delete-link { color:#d32f2f; }
+  mark.highlight { background:#ffeb3b; padding:0 2px; border-radius:2px; font-weight:600; }
 </style>
 
 <div class="view-container">
     <h2>📖 All Books</h2>
 
-    <form method="get" style="margin-bottom:16px;display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;">
+    <form method="get" action="{% url 'view_books' %}" style="margin-bottom:16px;display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;">
         <div>
             <label style="display:block;font-size:12px;margin-bottom:4px;">Keyword</label>
             <input type="text" name="q" value="{{ query|default:'' }}" placeholder="Title, author, ISBN..."
@@ -69,8 +70,8 @@
                 data-image="{% if book.image %}{{ book.image.url }}{% else %}{% static 'images/placeholder_book.png' %}{% endif %}">
 
                 <td><a href="{% url 'admin_book_details' book.pk %}">{% if query %}{{ book.name|highlight:query }}{% else %}{{ book.name }}{% endif %}</a></td>
-                <td>{{ book.isbn }}</td>
-                <td>{{ book.author }}</td>
+                <td>{% if query %}{{ book.isbn|highlight:query }}{% else %}{{ book.isbn }}{% endif %}</td>
+                <td>{% if query %}{{ book.author|highlight:query }}{% else %}{{ book.author }}{% endif %}</td>
                 <td>{{ book.category.name }}</td>
                 <td>{{ book.number_in_stock }}</td>
                 <td>⭐ {{ book.combined_rating }}/5</td>
@@ -96,5 +97,125 @@
 
     {% include 'partials/pagination.html' with page_obj=page_obj pagination_query=pagination_query %}
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const input = document.querySelector('input[name="q"]');
+    const categorySelect = document.querySelector('select[name="category"]');
+
+    // Debounce helper
+    function debounce(fn, delay) {
+        let t;
+        return function(...args) {
+            clearTimeout(t);
+            t = setTimeout(() => fn.apply(this, args), delay);
+        };
+    }
+
+    // Escape regex special chars
+    function escapeRegExp(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    // Highlight matches in table cells
+    function highlightInTables(query) {
+        const q = (query || '').trim();
+        const tables = document.querySelectorAll('table');
+        tables.forEach(table => {
+            const thead = table.querySelector('thead');
+            if (!thead) return;
+            
+            const headers = Array.from(thead.querySelectorAll('th')).map(th => th.textContent.trim().toLowerCase());
+            const targets = [];
+            ['name', 'author', 'isbn'].forEach(key => {
+                const idx = headers.findIndex(h => h.includes(key));
+                if (idx > -1) targets.push(idx);
+            });
+
+            if (targets.length === 0) return;
+
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                targets.forEach(i => {
+                    if (i >= cells.length) return;
+                    const cell = cells[i];
+                    
+                    if (!cell.dataset.originalHtml) {
+                        cell.dataset.originalHtml = cell.innerHTML;
+                    }
+                    
+                    const originalHtml = cell.dataset.originalHtml;
+                    cell.innerHTML = originalHtml;
+                    
+                    if (!q) return;
+                    
+                    const pattern = new RegExp(escapeRegExp(q), 'ig');
+
+                    function highlightTextNodes(el) {
+                        const childNodes = Array.from(el.childNodes);
+                        childNodes.forEach(node => {
+                            if (node.nodeType === Node.TEXT_NODE) {
+                                const text = node.nodeValue;
+                                let lastIndex = 0;
+                                const fragments = [];
+                                let m;
+                                while ((m = pattern.exec(text)) !== null) {
+                                    const idx = m.index;
+                                    if (idx > lastIndex) fragments.push(document.createTextNode(text.slice(lastIndex, idx)));
+                                    const mark = document.createElement('mark');
+                                    mark.className = 'highlight';
+                                    mark.textContent = m[0];
+                                    fragments.push(mark);
+                                    lastIndex = idx + m[0].length;
+                                }
+                                if (fragments.length) {
+                                    fragments.push(document.createTextNode(text.slice(lastIndex)));
+                                    fragments.forEach(f => el.insertBefore(f, node));
+                                    el.removeChild(node);
+                                }
+                            } else if (node.nodeType === Node.ELEMENT_NODE) {
+                                const tag = node.tagName && node.tagName.toLowerCase();
+                                if (tag !== 'script' && tag !== 'style') {
+                                    highlightTextNodes(node);
+                                }
+                            }
+                        });
+                    }
+
+                    try {
+                        highlightTextNodes(cell);
+                    } catch (e) {
+                        const highlighted = originalHtml.replace(pattern, match => `<mark class="highlight">${match}</mark>`);
+                        cell.innerHTML = highlighted;
+                    }
+                });
+            });
+        });
+    }
+
+    const debouncedHighlight = debounce(function() {
+        highlightInTables(input.value);
+    }, 180);
+
+    input.addEventListener('input', debouncedHighlight);
+
+    // Category filtering
+    if (categorySelect) {
+        categorySelect.addEventListener('change', function() {
+            const val = this.value;
+            const rows = document.querySelectorAll('table tbody tr');
+            rows.forEach(r => {
+                const cat = r.getAttribute('data-category-id') || '';
+                if (!val) {
+                    r.style.display = '';
+                } else {
+                    r.style.display = (cat === val) ? '' : 'none';
+                }
+            });
+        });
+    }
+});
+</script>
 
 {% endblock %}

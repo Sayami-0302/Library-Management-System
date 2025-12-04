@@ -1,4 +1,4 @@
-<form id="book-search-form" method="get" action="{% url 'public_books' %}" style="position: relative; display:flex; gap:8px; align-items:center;">
+<form id="book-search-form" method="get" action="{% url current_page %}" style="position: relative; display:flex; gap:8px; align-items:center;">
     <input type="text" name="q" id="book-search-input" placeholder="Search books..." autocomplete="off" style="flex:1;" value="{{ query|default:'' }}">
     <div style="display:flex;align-items:center;gap:8px;">
         <label for="filter-category-select" style="margin-right:6px;">Category</label>

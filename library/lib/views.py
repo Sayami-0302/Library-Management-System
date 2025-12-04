@@ -109,15 +109,14 @@ def public_books(request):
 
     books = Book.objects.all()
     if q:
-        # Search across name, author, ISBN, and category with relevance ranking
+        # Search across name, author, ISBN only (NOT category)
         books = books.filter(
             Q(name__icontains=q) |
             Q(author__icontains=q) |
-            Q(isbn__icontains=q) |
-            Q(category__name__icontains=q)
+            Q(isbn__icontains=q)
         ).annotate(
             # Prioritize: book name that starts with query first (so "A" shows "Atomic Habits" before others),
-            # then name contains, then author, ISBN, and category.
+            # then name contains, then author, ISBN.
             match_priority=Case(
                 When(name__istartswith=q, then=Value(0)),
                 When(name__icontains=q, then=Value(1)),
@@ -125,15 +124,14 @@ def public_books(request):
                 When(author__icontains=q, then=Value(3)),
                 When(isbn__istartswith=q, then=Value(4)),
                 When(isbn__icontains=q, then=Value(5)),
-                When(category__name__istartswith=q, then=Value(6)),
-                When(category__name__icontains=q, then=Value(7)),
-                default=Value(8),
+                default=Value(6),
                 output_field=IntegerField()
             )
         ).order_by('match_priority', 'name')
     else:
         books = books.order_by('name')  # sorted alphabetically
     
+    # Category filter (separate from search)
     if category_id:
         try:
             cid = int(category_id)
@@ -150,6 +148,7 @@ def public_books(request):
         'query': q,
         'selected_category': category_id,
         'pagination_query': pagination_querystring(request),
+        'current_page': 'public_books',
     })
 
 
@@ -632,6 +631,7 @@ def reader_view_books(request):
         'pagination_query': pagination_querystring(request),
         'query': q,
         'selected_category': category_id,
+        'current_page': 'reader_view_books',
     })
 
 def reader_book_detail(request, pk):
@@ -1237,16 +1237,15 @@ def ajax_search_books(request):
         limit = 8
 
     books = Book.objects.all()
-    # Search across book name, author, ISBN and category for suggestions
+    # Search across book name, author, and ISBN only (NOT category)
     if query:
         books = books.filter(
             Q(name__icontains=query) |
             Q(author__icontains=query) |
-            Q(isbn__icontains=query) |
-            Q(category__name__icontains=query)
+            Q(isbn__icontains=query)
         ).annotate(
             # Prioritize: book name starts with query (0) > name contains (1) >
-            # author starts with (2) > author contains (3) > ISBN/category
+            # author starts with (2) > author contains (3) > ISBN
             match_priority=Case(
                 When(name__istartswith=query, then=Value(0)),
                 When(name__icontains=query, then=Value(1)),
@@ -1254,15 +1253,14 @@ def ajax_search_books(request):
                 When(author__icontains=query, then=Value(3)),
                 When(isbn__istartswith=query, then=Value(4)),
                 When(isbn__icontains=query, then=Value(5)),
-                When(category__name__istartswith=query, then=Value(6)),
-                When(category__name__icontains=query, then=Value(7)),
-                default=Value(8),
+                default=Value(6),
                 output_field=IntegerField()
             )
         ).order_by('match_priority', 'name')
     else:
         books = books.order_by('name')
     
+    # Category filter (separate from search - for filtering only)
     if category_id:
         books = books.filter(category_id=category_id)
 
@@ -1542,3 +1540,288 @@ def import_books(request):
         form = UploadExcelForm()
 
     return render(request, "import_books.html", {"form": form})
+
+
+### Export Functions
+
+@admin_login_required
+def export_issues(request):
+    """Export issues data in different formats"""
+    format_type = request.GET.get('format', 'csv').lower()
+    
+    # Get all issues
+    issues = Issue.objects.select_related('reader', 'book').all().order_by('-issued_date')
+    
+    # Create data list
+    data = []
+    for issue in issues:
+        data.append({
+            'Reader Name': issue.reader.name,
+            'Reader ID': issue.reader.reader_id,
+            'Book Name': issue.book.name,
+            'ISBN': issue.book.isbn,
+            'Issued Date': issue.issued_date,
+            'Due Date': issue.due_date,
+            'Returned Date': issue.returned_date or 'Not Returned',
+            'Status': 'Returned' if issue.returned_date else 'Not Returned',
+        })
+    
+    if format_type == 'csv':
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="issues.csv"'
+        
+        writer = csv.DictWriter(response, fieldnames=data[0].keys() if data else [])
+        writer.writeheader()
+        writer.writerows(data)
+        return response
+    
+    elif format_type == 'xlsx':
+        df = pd.DataFrame(data)
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename="issues.xlsx"'
+        
+        with io.BytesIO() as buffer:
+            df.to_excel(buffer, index=False)
+            response.write(buffer.getvalue())
+        return response
+    
+    elif format_type == 'pdf':
+        try:
+            from reportlab.lib.pagesizes import letter, A4
+            from reportlab.lib.styles import getSampleStyleSheet
+            from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+            from reportlab.lib import colors
+            
+            response = HttpResponse(content_type='application/pdf')
+            response['Content-Disposition'] = 'attachment; filename="issues.pdf"'
+            
+            doc = SimpleDocTemplate(response, pagesize=A4)
+            elements = []
+            
+            # Title
+            styles = getSampleStyleSheet()
+            title = Paragraph("Issues Report", styles['Title'])
+            elements.append(title)
+            
+            # Table data
+            table_data = [['Reader Name', 'Reader ID', 'Book Name', 'ISBN', 'Issued Date', 'Due Date', 'Returned Date', 'Status']]
+            for item in data:
+                table_data.append([
+                    item['Reader Name'],
+                    item['Reader ID'],
+                    item['Book Name'],
+                    item['ISBN'],
+                    str(item['Issued Date']),
+                    str(item['Due Date']),
+                    str(item['Returned Date']),
+                    item['Status'],
+                ])
+            
+            table = Table(table_data)
+            table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ]))
+            elements.append(table)
+            
+            doc.build(elements)
+            return response
+        except ImportError:
+            messages.error(request, "PDF export requires reportlab library.")
+            return redirect('view_issues')
+    
+    messages.error(request, "Invalid format specified.")
+    return redirect('view_issues')
+
+
+@admin_login_required
+def export_fines(request):
+    """Export fines data in different formats"""
+    format_type = request.GET.get('format', 'csv').lower()
+    
+    # Get all fines
+    fines = Fine.objects.select_related('issue__reader', 'issue__book').all().order_by('-calculated_date')
+    
+    # Create data list
+    data = []
+    for fine in fines:
+        data.append({
+            'Reader Name': fine.issue.reader.name,
+            'Reader ID': fine.issue.reader.reader_id,
+            'Book Name': fine.issue.book.name,
+            'Amount': float(fine.amount),
+            'Calculated Date': fine.calculated_date,
+            'Status': 'Paid' if fine.paid else 'Unpaid',
+        })
+    
+    if format_type == 'csv':
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="fines.csv"'
+        
+        writer = csv.DictWriter(response, fieldnames=data[0].keys() if data else [])
+        writer.writeheader()
+        writer.writerows(data)
+        return response
+    
+    elif format_type == 'xlsx':
+        df = pd.DataFrame(data)
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename="fines.xlsx"'
+        
+        with io.BytesIO() as buffer:
+            df.to_excel(buffer, index=False)
+            response.write(buffer.getvalue())
+        return response
+    
+    elif format_type == 'pdf':
+        try:
+            from reportlab.lib.pagesizes import letter, A4
+            from reportlab.lib.styles import getSampleStyleSheet
+            from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+            from reportlab.lib import colors
+            
+            response = HttpResponse(content_type='application/pdf')
+            response['Content-Disposition'] = 'attachment; filename="fines.pdf"'
+            
+            doc = SimpleDocTemplate(response, pagesize=A4)
+            elements = []
+            
+            # Title
+            styles = getSampleStyleSheet()
+            title = Paragraph("Fines Report", styles['Title'])
+            elements.append(title)
+            
+            # Table data
+            table_data = [['Reader Name', 'Reader ID', 'Book Name', 'Amount', 'Calculated Date', 'Status']]
+            for item in data:
+                table_data.append([
+                    item['Reader Name'],
+                    item['Reader ID'],
+                    item['Book Name'],
+                    f"₹{item['Amount']}",
+                    str(item['Calculated Date']),
+                    item['Status'],
+                ])
+            
+            table = Table(table_data)
+            table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ]))
+            elements.append(table)
+            
+            doc.build(elements)
+            return response
+        except ImportError:
+            messages.error(request, "PDF export requires reportlab library.")
+            return redirect('view_fines')
+    
+    messages.error(request, "Invalid format specified.")
+    return redirect('view_fines')
+
+
+@admin_login_required
+def export_readers(request):
+    """Export readers data in different formats"""
+    format_type = request.GET.get('format', 'csv').lower()
+    
+    # Get all readers
+    readers = Reader.objects.all().order_by('name')
+    
+    # Create data list
+    data = []
+    for reader in readers:
+        data.append({
+            'Reader ID': reader.reader_id,
+            'Name': reader.name,
+            'Date of Birth': reader.date_of_birth,
+            'Phone': reader.phone_number,
+            'Address': reader.address,
+            'Status': 'Active' if reader.is_active else 'Inactive',
+            'Role': 'Staff/Teacher' if reader.is_staff_member else 'Student',
+        })
+    
+    if format_type == 'csv':
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="readers.csv"'
+        
+        writer = csv.DictWriter(response, fieldnames=data[0].keys() if data else [])
+        writer.writeheader()
+        writer.writerows(data)
+        return response
+    
+    elif format_type == 'xlsx':
+        df = pd.DataFrame(data)
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename="readers.xlsx"'
+        
+        with io.BytesIO() as buffer:
+            df.to_excel(buffer, index=False)
+            response.write(buffer.getvalue())
+        return response
+    
+    elif format_type == 'pdf':
+        try:
+            from reportlab.lib.pagesizes import letter, A4
+            from reportlab.lib.styles import getSampleStyleSheet
+            from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+            from reportlab.lib import colors
+            
+            response = HttpResponse(content_type='application/pdf')
+            response['Content-Disposition'] = 'attachment; filename="readers.pdf"'
+            
+            doc = SimpleDocTemplate(response, pagesize=A4)
+            elements = []
+            
+            # Title
+            styles = getSampleStyleSheet()
+            title = Paragraph("Readers Report", styles['Title'])
+            elements.append(title)
+            
+            # Table data
+            table_data = [['Reader ID', 'Name', 'Date of Birth', 'Phone', 'Address', 'Status', 'Role']]
+            for item in data:
+                table_data.append([
+                    item['Reader ID'],
+                    item['Name'],
+                    str(item['Date of Birth']),
+                    item['Phone'],
+                    item['Address'][:20] + '...' if len(item['Address']) > 20 else item['Address'],
+                    item['Status'],
+                    item['Role'],
+                ])
+            
+            table = Table(table_data)
+            table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ]))
+            elements.append(table)
+            
+            doc.build(elements)
+            return response
+        except ImportError:
+            messages.error(request, "PDF export requires reportlab library.")
+            return redirect('view_readers')
+    
+    messages.error(request, "Invalid format specified.")
+    return redirect('view_readers')
+

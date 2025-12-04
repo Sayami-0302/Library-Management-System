@@ -4,6 +4,14 @@
 <style>
   .view-container { margin:24px; }
   h2 { color:#2c3e50; margin-bottom:20px; }
+  .buttons-container { display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+  .export-btn { display:inline-block; padding:10px 16px; background:#4CAF50; color:white; text-decoration:none; border-radius:4px; border:none; cursor:pointer; font-size:14px; font-weight:600; }
+  .export-btn:hover { background:#45a049; }
+  .export-dropdown { position:relative; display:inline-block; }
+  .export-dropdown-content { display:none; position:absolute; background-color:#f9f9f9; min-width:160px; box-shadow:0px 8px 16px 0px rgba(0,0,0,0.2); padding:12px 16px; z-index:1; border-radius:4px; }
+  .export-dropdown-content a { color:#2196F3; text-decoration:none; display:block; padding:8px 0; }
+  .export-dropdown-content a:hover { text-decoration:underline; }
+  .export-dropdown:hover .export-dropdown-content { display:block; }
   table { width:100%; border-collapse:collapse; background:white; box-shadow:0 2px 4px rgba(0,0,0,0.1); }
   th { background:#2196F3; color:white; padding:12px; text-align:left; }
   td { padding:12px; border-bottom:1px solid #ddd; }
@@ -14,6 +22,17 @@
 
 <div class="view-container">
     <h2>👥 All Readers</h2>
+    
+    <div class="buttons-container">
+        <div class="export-dropdown">
+            <button class="export-btn">📥 Export Data</button>
+            <div class="export-dropdown-content">
+                <a href="{% url 'export_readers' %}?format=csv">📄 Export as CSV</a>
+                <a href="{% url 'export_readers' %}?format=xlsx">📊 Export as XLSX</a>
+                <a href="{% url 'export_readers' %}?format=pdf">📋 Export as PDF</a>
+            </div>
+        </div>
+    </div>
     <table>
         <thead>
             <tr>

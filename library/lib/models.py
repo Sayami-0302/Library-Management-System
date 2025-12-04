@@ -1,6 +1,6 @@
 from django.db import models
 from datetime import date, timedelta
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator, RegexValidator
 
     
 
@@ -67,7 +67,11 @@ class Reader(models.Model):
     reader_id = models.CharField(max_length=20, unique=True)  # Custom ID for library users
     name = models.CharField(max_length=200)
     date_of_birth = models.DateField()
-    phone_number = models.CharField(max_length=15, unique=True)  # to avoid duplicates
+    phone_number = models.CharField(
+        max_length=10,
+        unique=True,
+        validators=[RegexValidator(r'^\d{10}$', 'Phone number must be exactly 10 digits.')]
+    )  # Exactly 10 digits
     address = models.TextField()
     password = models.CharField(max_length=128, default='temp123')
     is_active = models.BooleanField(default=True)
