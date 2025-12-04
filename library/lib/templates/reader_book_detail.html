@@ -213,26 +213,56 @@ document.addEventListener('DOMContentLoaded', function() {
 
     
     {% if popular_books %}
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:30px;max-width:1000px;">
             {% for pop_book in popular_books %}
-                <div style="border:1px solid #ddd;border-radius:8px;padding:12px;background:#f9f9f9;transition:box-shadow 0.2s;">
-                    <div style="height:180px;background:#f0f0f0;border-radius:4px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+                <div style="border:1px solid #ddd;border-radius:8px;overflow:hidden;background:#f9f9f9;transition:box-shadow 0.2s;cursor:pointer;display:flex;flex-direction:column;height:100%;">
+                    <div style="height:280px;background:#f0f0f0;overflow:hidden;flex-shrink:0;">
                         {% if pop_book.image %}
                             <img src="{{ pop_book.image.url }}" alt="{{ pop_book.name }}" style="width:100%;height:100%;object-fit:cover;">
                         {% else %}
-                            <span style="color:#999;">No image</span>
+                            <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#999;">No image</div>
                         {% endif %}
                     </div>
-                    <h4 style="margin:8px 0;font-size:14px;">{{ pop_book.name }}</h4>
-                    <p style="margin:4px 0;font-size:12px;color:#555;"><strong>Author:</strong> {{ pop_book.author }}</p>
-                    <p style="margin:4px 0;font-size:12px;color:#555;"><strong>Rating:</strong> ⭐ {{ pop_book.rating }}/5</p>
-                    <p style="margin:4px 0;font-size:12px;color:#555;"><strong>Stock:</strong> {{ pop_book.number_in_stock }}</p>
-                    <a href="{% url 'reader_book_detail' pop_book.pk %}" style="display:inline-block;margin-top:8px;padding:6px 12px;background:#4CAF50;color:white;border-radius:4px;text-decoration:none;font-size:12px;">View Details</a>
+                    <div style="padding:16px;flex-grow:1;display:flex;flex-direction:column;justify-content:space-between;">
+                        <div>
+                            <h4 style="margin:0 0 8px 0;font-size:14px;font-weight:600;line-height:1.3;word-wrap:break-word;">{{ pop_book.name }}</h4>
+                            <p style="margin:0 0 4px 0;font-size:12px;color:#666;">⭐ {{ pop_book.combined_rating }}/5</p>
+                        </div>
+                        <a href="{% url 'reader_book_detail' pop_book.pk %}" style="display:inline-block;margin-top:8px;padding:8px 12px;background:#4CAF50;color:white;border-radius:4px;text-decoration:none;font-size:12px;text-align:center;width:100%;box-sizing:border-box;">View</a>
+                    </div>
                 </div>
             {% endfor %}
         </div>
     {% else %}
         <p style="color:#999;">No popular books available yet.</p>
+    {% endif %}
+</section>
+
+<section style="margin-top:32px;">
+    <h2>📚 Similar Books</h2>
+    {% if similar_books %}
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:30px;max-width:1000px;">
+            {% for sim_book in similar_books %}
+                <div style="border:1px solid #ddd;border-radius:8px;overflow:hidden;background:#f9f9f9;transition:box-shadow 0.2s;cursor:pointer;display:flex;flex-direction:column;height:100%;">
+                    <div style="height:280px;background:#f0f0f0;overflow:hidden;flex-shrink:0;">
+                        {% if sim_book.image %}
+                            <img src="{{ sim_book.image.url }}" alt="{{ sim_book.name }}" style="width:100%;height:100%;object-fit:cover;">
+                        {% else %}
+                            <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#999;">No image</div>
+                        {% endif %}
+                    </div>
+                    <div style="padding:16px;flex-grow:1;display:flex;flex-direction:column;justify-content:space-between;">
+                        <div>
+                            <h4 style="margin:0 0 8px 0;font-size:14px;font-weight:600;line-height:1.3;word-wrap:break-word;">{{ sim_book.name }}</h4>
+                            <p style="margin:0 0 4px 0;font-size:12px;color:#666;">⭐ {{ sim_book.combined_rating }}/5</p>
+                        </div>
+                        <a href="{% url 'reader_book_detail' sim_book.pk %}" style="display:inline-block;margin-top:8px;padding:8px 12px;background:#4CAF50;color:white;border-radius:4px;text-decoration:none;font-size:12px;text-align:center;width:100%;box-sizing:border-box;">View</a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p style="color:#999;">No similar books available in this category.</p>
     {% endif %}
 </section>
 

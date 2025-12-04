@@ -240,11 +240,13 @@ def book_details(request, pk):
     # General visitor (not admin and not logged-in reader)
     book = get_object_or_404(Book, pk=pk)  # fetch book or return 404 if not found
     analytics = get_book_analytics_data(book, days=90)
-    popular_books = get_popular_books(limit=3, exclude_book_id=pk)
+    popular_books = get_popular_books(limit=4, exclude_book_id=pk)
+    similar_books = get_similar_books(book, limit=4)
     return render(request, 'book_details.html', {
         'book': book,
         'analytics': analytics,
         'popular_books': popular_books,
+        'similar_books': similar_books,
     })
 
 
@@ -265,11 +267,13 @@ def admin_book_details(request, pk):
 
     book = get_object_or_404(Book, pk=pk)
     analytics = get_book_analytics_data(book, days=90)
-    popular_books = get_popular_books(limit=3, exclude_book_id=pk)
+    popular_books = get_popular_books(limit=4, exclude_book_id=pk)
+    similar_books = get_similar_books(book, limit=4)
     return render(request, 'admin_book_details.html', {
         'book': book,
         'analytics': analytics,
         'popular_books': popular_books,
+        'similar_books': similar_books,
     })
 
 
@@ -640,7 +644,8 @@ def reader_book_detail(request, pk):
     """
     book = get_object_or_404(Book, pk=pk)
     analytics = get_book_analytics_data(book, days=90)
-    popular_books = get_popular_books(limit=3, exclude_book_id=pk)
+    popular_books = get_popular_books(limit=4, exclude_book_id=pk)
+    similar_books = get_similar_books(book, limit=4)
     # compute average rating given by readers
     avg_reader_rating = BookRating.objects.filter(book=book).aggregate(avg=Avg('rating'))['avg']
     if avg_reader_rating is None:
@@ -665,6 +670,7 @@ def reader_book_detail(request, pk):
         'book': book,
         'analytics': analytics,
         'popular_books': popular_books,
+        'similar_books': similar_books,
         'combined_rating': combined_rating,
         'avg_reader_rating': round(avg_reader_rating, 1),
         'user_rating': user_rating,
@@ -1465,15 +1471,33 @@ def book_analytics_api(request, pk):
     return JsonResponse(data)
 
 
-def get_popular_books(limit=3, exclude_book_id=None):
-    """Get random popular books with rating > 4.5."""
-    books = Book.objects.filter(rating__gt=4.5)
+def get_popular_books(limit=4, exclude_book_id=None):
+    """Get random popular books with combined rating >= 4.5."""
+    # Get all books and calculate combined rating for each
+    all_books = Book.objects.all()
     
     if exclude_book_id:
-        books = books.exclude(pk=exclude_book_id)
+        all_books = all_books.exclude(pk=exclude_book_id)
     
-    # Order by random and limit
-    books = books.order_by('?')[:limit]
+    # Filter books by combined rating >= 4.5
+    popular = []
+    for book in all_books:
+        if book.combined_rating() >= 4.5:
+            popular.append(book)
+    
+    # Shuffle randomly and return limited results
+    import random
+    random.shuffle(popular)
+    return popular[:limit]
+
+
+def get_similar_books(book, limit=4):
+    """Get random books from the same category."""
+    books = Book.objects.filter(
+        category=book.category
+    ).exclude(
+        pk=book.pk
+    ).order_by('?')[:limit]
     return books
 @admin_login_required
 def import_books(request):
