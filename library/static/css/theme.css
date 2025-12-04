@@ -346,6 +346,309 @@ a:hover {
   text-decoration: underline;
 }
 
+/* Dark Mode Tailwind Color Overrides */
+/* Override hardcoded Tailwind slate colors for dark mode visibility */
+
+/* text-slate-900 -> light color in dark mode */
+:root[data-theme="dark"] .text-slate-900 {
+  color: #F1F5F9 !important;
+}
+
+/* text-slate-800 -> light color in dark mode */
+:root[data-theme="dark"] .text-slate-800 {
+  color: #E2E8F0 !important;
+}
+
+/* text-slate-700 -> light color in dark mode */
+:root[data-theme="dark"] .text-slate-700 {
+  color: #CBD5E1 !important;
+}
+
+/* text-slate-600 -> light color in dark mode */
+:root[data-theme="dark"] .text-slate-600 {
+  color: #94A3B8 !important;
+}
+
+/* text-slate-500 -> lighter color in dark mode */
+:root[data-theme="dark"] .text-slate-500 {
+  color: #94A3B8 !important;
+}
+
+/* text-gray-600, text-gray-700, text-gray-800, text-gray-900 */
+:root[data-theme="dark"] .text-gray-900 {
+  color: #F1F5F9 !important;
+}
+
+:root[data-theme="dark"] .text-gray-800 {
+  color: #E2E8F0 !important;
+}
+
+:root[data-theme="dark"] .text-gray-700 {
+  color: #CBD5E1 !important;
+}
+
+:root[data-theme="dark"] .text-gray-600 {
+  color: #94A3B8 !important;
+}
+
+/* bg-white colors - dark background in dark mode */
+:root[data-theme="dark"] .bg-white,
+:root[data-theme="dark"] .bg-white\/80,
+:root[data-theme="dark"] .bg-white\/50 {
+  background-color: #1a1f35 !important;
+}
+
+/* bg-slate colors */
+:root[data-theme="dark"] .bg-slate-50 {
+  background-color: #0f1423 !important;
+}
+
+:root[data-theme="dark"] .bg-slate-50\/80 {
+  background-color: rgba(15, 20, 35, 0.9) !important;
+}
+
+:root[data-theme="dark"] .bg-slate-100 {
+  background-color: #1e293b !important;
+}
+
+/* border colors for dark mode */
+:root[data-theme="dark"] .border-slate-100 {
+  border-color: #334155 !important;
+}
+
+:root[data-theme="dark"] .border-slate-200 {
+  border-color: #475569 !important;
+}
+
+:root[data-theme="dark"] .border-slate-200\/70 {
+  border-color: rgba(71, 85, 105, 0.7) !important;
+}
+
+/* Placeholder text in dark mode */
+:root[data-theme="dark"] input::placeholder {
+  color: #94A3B8 !important;
+}
+
+:root[data-theme="dark"] textarea::placeholder {
+  color: #94A3B8 !important;
+}
+
+/* Form inputs background and text in dark mode */
+:root[data-theme="dark"] input[type="text"],
+:root[data-theme="dark"] input[type="email"],
+:root[data-theme="dark"] input[type="password"],
+:root[data-theme="dark"] input[type="date"],
+:root[data-theme="dark"] input[type="number"],
+:root[data-theme="dark"] textarea,
+:root[data-theme="dark"] select {
+  background-color: #0f1423 !important;
+  color: #E2E8F0 !important;
+  border-color: #334155 !important;
+}
+
+/* Button text colors in dark mode */
+:root[data-theme="dark"] .hover\:text-slate-700:hover {
+  color: #E2E8F0 !important;
+}
+
+:root[data-theme="dark"] .hover\:text-slate-900:hover {
+  color: #F1F5F9 !important;
+}
+
+/* Gradient backgrounds in dark mode */
+:root[data-theme="dark"] .bg-gradient-to-b {
+  background-image: linear-gradient(to bottom, #0f1423, #1e293b) !important;
+}
+
+:root[data-theme="dark"] .bg-gradient-to-r {
+  background-image: linear-gradient(to right, #0f1423, #1a1f35) !important;
+}
+
+/* Sky color overrides for dark mode */
+:root[data-theme="dark"] .text-sky-700 {
+  color: #38BDF8 !important;
+}
+
+:root[data-theme="dark"] .text-sky-800 {
+  color: #0EA5E9 !important;
+}
+
+:root[data-theme="dark"] .bg-sky-50 {
+  background-color: #082f49 !important;
+}
+
+:root[data-theme="dark"] .bg-sky-50\/80 {
+  background-color: rgba(8, 47, 73, 0.9) !important;
+}
+
+:root[data-theme="dark"] .text-indigo-600 {
+  color: #818CF8 !important;
+}
+
+/* Hover states for dark mode */
+:root[data-theme="dark"] .hover\:bg-slate-100:hover {
+  background-color: #1e293b !important;
+}
+
+:root[data-theme="dark"] .hover\:bg-sky-50\/80:hover {
+  background-color: rgba(8, 47, 73, 0.9) !important;
+}
+
+:root[data-theme="dark"] .hover\:text-sky-800:hover {
+  color: #0EA5E9 !important;
+}
+
+/* Header and nav specific dark mode overrides */
+:root[data-theme="dark"] header {
+  background-color: #1a1f35 !important;
+  border-bottom-color: #334155 !important;
+}
+
+:root[data-theme="dark"] nav {
+  background-color: transparent !important;
+}
+
+/* Mobile panel dark mode */
+:root[data-theme="dark"] .sl-mobile-panel {
+  background-color: #1a1f35 !important;
+  border-top-color: #334155 !important;
+}
+
+/* Links styling in dark mode */
+:root[data-theme="dark"] .hover\:text-slate-900:hover {
+  color: #F1F5F9 !important;
+}
+
+/* Additional text color overrides for completeness */
+:root[data-theme="dark"] .text-black {
+  color: #F1F5F9 !important;
+}
+
+:root[data-theme="dark"] .text-neutral-900 {
+  color: #F1F5F9 !important;
+}
+
+:root[data-theme="dark"] .text-zinc-900 {
+  color: #F1F5F9 !important;
+}
+
+:root[data-theme="dark"] .text-stone-900 {
+  color: #F1F5F9 !important;
+}
+
+/* Backdrop blur optimization for dark mode */
+:root[data-theme="dark"] .backdrop-blur {
+  --tw-backdrop-blur: blur(10px);
+}
+
+/* Cards and content sections */
+:root[data-theme="dark"] .bg-gradient-to-b {
+  background: linear-gradient(to bottom, #0f1423, #1e293b, #1a1f35) !important;
+}
+
+/* Specific element overrides */
+:root[data-theme="dark"] thead {
+  background-color: #0EA5E9 !important;
+}
+
+:root[data-theme="dark"] tbody tr:hover {
+  background-color: #1a1f35 !important;
+}
+
+/* Alert backgrounds in dark mode */
+:root[data-theme="dark"] .alert-success {
+  background-color: #064e3b !important;
+  color: #6ee7b7 !important;
+}
+
+:root[data-theme="dark"] .alert-info {
+  background-color: #082f49 !important;
+  color: #38bdf8 !important;
+}
+
+:root[data-theme="dark"] .alert-warning {
+  background-color: #78350f !important;
+  color: #fbbf24 !important;
+}
+
+:root[data-theme="dark"] .alert-error {
+  background-color: #7c2d12 !important;
+  color: #fb7185 !important;
+}
+
+/* Inline style overrides for inline CSS in templates */
+:root[data-theme="dark"] h2 {
+  color: #E2E8F0 !important;
+}
+
+:root[data-theme="dark"] h3 {
+  color: #E2E8F0 !important;
+}
+
+:root[data-theme="dark"] h4 {
+  color: #E2E8F0 !important;
+}
+
+:root[data-theme="dark"] h5 {
+  color: #E2E8F0 !important;
+}
+
+:root[data-theme="dark"] h6 {
+  color: #E2E8F0 !important;
+}
+
+/* Table specific dark mode fixes */
+:root[data-theme="dark"] table {
+  background-color: #1a1f35 !important;
+  color: #E2E8F0 !important;
+}
+
+:root[data-theme="dark"] table td {
+  color: #E2E8F0 !important;
+  border-bottom-color: #334155 !important;
+}
+
+:root[data-theme="dark"] table th {
+  background-color: #0EA5E9 !important;
+  color: white !important;
+}
+
+:root[data-theme="dark"] table tr:hover {
+  background-color: #2d3748 !important;
+}
+
+/* Div with inline styles */
+:root[data-theme="dark"] .view-container {
+  color: #E2E8F0 !important;
+}
+
+:root[data-theme="dark"] .empty {
+  color: #94A3B8 !important;
+  background-color: #1a1f35 !important;
+}
+
+/* General text fixes for all elements */
+:root[data-theme="dark"] p {
+  color: #E2E8F0 !important;
+}
+
+:root[data-theme="dark"] li {
+  color: #E2E8F0 !important;
+}
+
+:root[data-theme="dark"] span {
+  color: inherit !important;
+}
+
+/* Links in tables and content */
+:root[data-theme="dark"] a {
+  color: #38BDF8 !important;
+}
+
+:root[data-theme="dark"] a:hover {
+  color: #0EA5E9 !important;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   header {

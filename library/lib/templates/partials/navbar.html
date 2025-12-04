@@ -1,5 +1,5 @@
 {% load static %}
-<header class="shadow-sm bg-white/80 backdrop-blur sticky top-0 z-30 border-b border-slate-200/70">
+<header class="shadow-sm bg-white/80 backdrop-blur sticky top-0 z-30 border-b border-slate-200/70 transition-colors duration-200">
   <nav class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
     <!-- Logo -->
     <a href="{% url 'home' %}" class="flex items-center gap-2 group">
@@ -53,7 +53,7 @@
   </nav>
 
   <!-- Mobile nav panel -->
-  <div class="md:hidden sl-mobile-panel bg-white border-t border-slate-200/80 shadow-sm"
+  <div class="md:hidden sl-mobile-panel bg-white border-t border-slate-200/80 shadow-sm transition-colors duration-200"
        x-cloak>
     <div class="mx-auto max-w-6xl px-4 py-3 space-y-2 text-sm font-medium">
       <a href="{% url 'home' %}#hero" class="block px-2 py-2 rounded-lg text-slate-700 hover:bg-slate-100">Home</a>
